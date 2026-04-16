@@ -146,6 +146,35 @@ body {
     0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
+.portfolio-blue-panel {
+  background-color: #6f5bf3;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 42%);
+  background-size: 160% 160%, 180% 180%;
+}
+
+.stack-marquee {
+  position: relative;
+  overflow: hidden;
+}
+
+.stack-marquee__track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 2rem;
+  padding-right: 2rem;
+}
+
+.stack-marquee__item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6rem;
+}
+
 @media (min-width: 640px) {
   .intro-grid {
     padding: 1.85rem 1.85rem 2.2rem;
@@ -154,6 +183,15 @@ body {
   .portfolio-overlay-shell {
     border-top-left-radius: 2.5rem;
     border-top-right-radius: 2.5rem;
+  }
+
+  .stack-marquee__track {
+    gap: 4rem;
+    padding-right: 4rem;
+  }
+
+  .stack-marquee__item {
+    min-width: 9rem;
   }
 }
 
