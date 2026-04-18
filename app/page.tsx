@@ -13,6 +13,7 @@ import {
 import gsap from "gsap";
 import Lenis from "lenis";
 import * as THREE from "three";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 const greetings = [
   "selamat datang",
@@ -31,12 +32,16 @@ const menuItems = [
   "Contact",
 ];
 
-const socialItems = ["LinkedIn", "Instagram", "Github", "Youtube"];
+const fallbackSocialItems = [
+  { label: "LinkedIn", url: "https://linkedin.com" },
+  { label: "Instagram", url: "https://instagram.com" },
+  { label: "Github", url: "https://github.com" },
+  { label: "Youtube", url: "https://youtube.com" },
+];
 
-const aboutDescription =
+const fallbackAboutDescription =
   "I am a fresh graduate in Software Engineering with a strong passion for building innovative solutions in web, backend systems, and AI. With over 3 years of practical experience through projects, intensive learning, and professional exposure, I have built a solid foundation in modern application development, problem-solving, and innovation.";
-const aboutWords = aboutDescription.split(" ");
-const stackSections: Array<{
+const fallbackStackSections: Array<{
   title: string;
   items: Array<{
     name: string;
@@ -135,6 +140,331 @@ const stackSections: Array<{
     ],
   },
 ];
+
+const fallbackProjectItems = [
+  {
+    index: "01",
+    title: "Portfolio CMS",
+    year: "2026",
+    category: "Admin Dashboard",
+    summary:
+      "A content management dashboard for updating profile, stack logos, and highlighted portfolio sections with a clean editorial workflow.",
+    stack: ["Next.js", "Supabase", "TypeScript", "Tailwind"],
+    accent: "from-[#6f5bf3]/30 via-[#6f5bf3]/10 to-transparent",
+    liveUrl: "#",
+    screens: [
+      {
+        eyebrow: "Dashboard",
+        title: "Content overview",
+        surfaceClass:
+          "from-[#6f5bf3]/70 via-[#19132f] to-[#090909]",
+      },
+      {
+        eyebrow: "Editor",
+        title: "Stack manager",
+        surfaceClass:
+          "from-[#8b7cff]/70 via-[#1c1734] to-[#090909]",
+      },
+      {
+        eyebrow: "Media",
+        title: "Project upload",
+        surfaceClass:
+          "from-[#5d49df]/70 via-[#120f24] to-[#090909]",
+      },
+    ],
+  },
+  {
+    index: "02",
+    title: "Project Showcase Platform",
+    year: "2026",
+    category: "Fullstack Web App",
+    summary:
+      "A responsive project listing experience with rich case studies, stack metadata, and modular sections designed for future admin-managed content.",
+    stack: ["React", "Node.js", "PostgreSQL", "Prisma"],
+    accent: "from-[#4ec7d3]/28 via-[#4ec7d3]/10 to-transparent",
+    liveUrl: "#",
+    screens: [
+      {
+        eyebrow: "Showcase",
+        title: "Landing grid",
+        surfaceClass:
+          "from-[#4ec7d3]/65 via-[#102126] to-[#090909]",
+      },
+      {
+        eyebrow: "Case Study",
+        title: "Detail layout",
+        surfaceClass:
+          "from-[#34a9b4]/68 via-[#102126] to-[#090909]",
+      },
+      {
+        eyebrow: "Insights",
+        title: "Tech breakdown",
+        surfaceClass:
+          "from-[#5fd4df]/64 via-[#112126] to-[#090909]",
+      },
+    ],
+  },
+  {
+    index: "03",
+    title: "API Monitoring Space",
+    year: "2025",
+    category: "Backend System",
+    summary:
+      "A backend-focused workspace for tracking API health, service uptime, and deployment notes with a compact interface and clear operational states.",
+    stack: ["Express", "Redis", "MySQL", "Docker"],
+    accent: "from-[#f0b65a]/26 via-[#f0b65a]/10 to-transparent",
+    liveUrl: "#",
+    screens: [
+      {
+        eyebrow: "Monitor",
+        title: "Status board",
+        surfaceClass:
+          "from-[#f0b65a]/70 via-[#261a0d] to-[#090909]",
+      },
+      {
+        eyebrow: "Logs",
+        title: "Request stream",
+        surfaceClass:
+          "from-[#e59f38]/64 via-[#24180b] to-[#090909]",
+      },
+      {
+        eyebrow: "Alerts",
+        title: "Incident feed",
+        surfaceClass:
+          "from-[#ffca70]/64 via-[#261a0d] to-[#090909]",
+      },
+    ],
+  },
+];
+
+const fallbackProfile = {
+  displayName: "Akbar Rayyan",
+  headline:
+    "Fullstack Developer — focused on building fast, reliable, and scalable digital products.",
+  bio: fallbackAboutDescription,
+  location: "Indonesia",
+  availability: "Available for work",
+  cvUrl: "#about",
+};
+
+const fallbackEducation = {
+  institution: "Politeknik Negeri Indramayu",
+  degree: "Teknik Informatika",
+  graduationLabel: "Graduated Oct - 2025",
+};
+
+const fallbackCoursework = [
+  "Web Programming",
+  "Backend Development",
+  "AI & ML Enthusiast",
+  "UI/UX Design",
+];
+
+type StackSection = (typeof fallbackStackSections)[number];
+type ProjectItem = (typeof fallbackProjectItems)[number];
+type SocialItem = (typeof fallbackSocialItems)[number];
+type ProfileContent = typeof fallbackProfile;
+type EducationContent = typeof fallbackEducation;
+
+type ProfileRow = {
+  display_name: string;
+  headline: string | null;
+  bio: string | null;
+  location: string | null;
+  availability: string | null;
+  cv_url: string | null;
+};
+
+type StackItemRow = {
+  name: string;
+  category: string;
+  icon_url: string;
+};
+
+type SocialLinkRow = {
+  label: string;
+  url: string;
+};
+
+type EducationRow = {
+  institution: string;
+  degree: string;
+  graduation_label: string | null;
+};
+
+type CourseworkRow = {
+  label: string;
+};
+
+type ProjectRow = {
+  title: string;
+  slug: string;
+  category: string | null;
+  summary: string | null;
+  cover_image_url: string | null;
+  gallery: unknown;
+  stack: string[] | null;
+  year: number | null;
+  live_url: string | null;
+};
+
+type ProjectScreen = ProjectItem["screens"][number];
+
+const fallbackProjectSurfaces: ProjectScreen[] = fallbackProjectItems.flatMap(
+  (item) => item.screens,
+);
+
+function inferStackClass(iconUrl: string) {
+  const normalized = iconUrl.toLowerCase();
+
+  if (normalized.includes("nextjs") || normalized.includes("threejs")) {
+    return "invert";
+  }
+
+  return undefined;
+}
+
+function titleCaseCategory(category: string) {
+  return category
+    .split(/[-_]/g)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function buildStackSections(rows: StackItemRow[] | null | undefined): StackSection[] {
+  if (!rows || rows.length === 0) {
+    return fallbackStackSections;
+  }
+
+  const grouped = rows.reduce<Record<string, StackSection["items"]>>(
+    (accumulator, row) => {
+      const key = row.category || "Other";
+      accumulator[key] ??= [];
+      accumulator[key].push({
+        name: row.name,
+        icon: row.icon_url,
+        className: inferStackClass(row.icon_url),
+      });
+      return accumulator;
+    },
+    {},
+  );
+
+  const sections = Object.entries(grouped).map(([category, items]) => ({
+    title: titleCaseCategory(category),
+    items,
+  }));
+
+  return sections.length > 0 ? sections : fallbackStackSections;
+}
+
+function normalizeGallery(gallery: unknown, projectIndex: number): ProjectScreen[] {
+  if (!Array.isArray(gallery) || gallery.length === 0) {
+    return fallbackProjectItems[projectIndex % fallbackProjectItems.length].screens;
+  }
+
+  const fallbackScreens =
+    fallbackProjectItems[projectIndex % fallbackProjectItems.length].screens;
+
+  return gallery
+    .map((item, screenIndex) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const record = item as Record<string, unknown>;
+      const fallbackScreen =
+        fallbackScreens[screenIndex % fallbackScreens.length] ??
+        fallbackProjectSurfaces[screenIndex % fallbackProjectSurfaces.length];
+
+      return {
+        eyebrow:
+          typeof record.eyebrow === "string"
+            ? record.eyebrow
+            : fallbackScreen.eyebrow,
+        title:
+          typeof record.title === "string" ? record.title : fallbackScreen.title,
+        surfaceClass:
+          typeof record.surfaceClass === "string"
+            ? record.surfaceClass
+            : fallbackScreen.surfaceClass,
+      };
+    })
+    .filter((item): item is ProjectScreen => item !== null);
+}
+
+function buildProjectItems(rows: ProjectRow[] | null | undefined): ProjectItem[] {
+  if (!rows || rows.length === 0) {
+    return fallbackProjectItems;
+  }
+
+  return rows.map((row, index) => {
+    const fallbackItem = fallbackProjectItems[index % fallbackProjectItems.length];
+
+    return {
+      index: String(index + 1).padStart(2, "0"),
+      title: row.title,
+      year: row.year ? String(row.year) : fallbackItem.year,
+      category: row.category || fallbackItem.category,
+      summary: row.summary ?? fallbackItem.summary,
+      stack: row.stack && row.stack.length > 0 ? row.stack : fallbackItem.stack,
+      accent: fallbackItem.accent,
+      screens: normalizeGallery(row.gallery, index),
+      liveUrl: row.live_url ?? "#",
+    };
+  });
+}
+
+function buildProfileContent(profile: ProfileRow | null | undefined): ProfileContent {
+  if (!profile) {
+    return fallbackProfile;
+  }
+
+  return {
+    displayName: profile.display_name || fallbackProfile.displayName,
+    headline: profile.headline || fallbackProfile.headline,
+    bio: profile.bio || fallbackProfile.bio,
+    location: profile.location || fallbackProfile.location,
+    availability: profile.availability || fallbackProfile.availability,
+    cvUrl: profile.cv_url || fallbackProfile.cvUrl,
+  };
+}
+
+function buildSocialItems(rows: SocialLinkRow[] | null | undefined): SocialItem[] {
+  if (!rows || rows.length === 0) {
+    return fallbackSocialItems;
+  }
+
+  return rows.map((row) => ({
+    label: row.label,
+    url: row.url,
+  }));
+}
+
+function buildEducationContent(
+  rows: EducationRow[] | null | undefined,
+): EducationContent {
+  const firstRow = rows?.[0];
+
+  if (!firstRow) {
+    return fallbackEducation;
+  }
+
+  return {
+    institution: firstRow.institution || fallbackEducation.institution,
+    degree: firstRow.degree || fallbackEducation.degree,
+    graduationLabel:
+      firstRow.graduation_label || fallbackEducation.graduationLabel,
+  };
+}
+
+function buildCourseworkItems(rows: CourseworkRow[] | null | undefined) {
+  if (!rows || rows.length === 0) {
+    return fallbackCoursework;
+  }
+
+  return rows.map((row) => row.label);
+}
 
 const GREETING_INTERVAL_MS = 2200;
 const LAST_GREETING_HOLD_MS = 900;
@@ -306,11 +636,28 @@ function StackGlyph({
   );
 }
 
+const supabase = createBrowserSupabaseClient();
+
 export default function Home() {
   const [greetingIndex, setGreetingIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isIntroFinished, setIsIntroFinished] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profileContent, setProfileContent] =
+    useState<ProfileContent>(fallbackProfile);
+  const [socialItems, setSocialItems] =
+    useState<SocialItem[]>(fallbackSocialItems);
+  const [stackSections, setStackSections] =
+    useState<StackSection[]>(fallbackStackSections);
+  const [projectItems, setProjectItems] =
+    useState<ProjectItem[]>(fallbackProjectItems);
+  const [educationContent, setEducationContent] =
+    useState<EducationContent>(fallbackEducation);
+  const [courseworkItems, setCourseworkItems] =
+    useState<string[]>(fallbackCoursework);
+  const [projectSlideIndexes, setProjectSlideIndexes] = useState(() =>
+    fallbackProjectItems.map(() => 0),
+  );
 
   const introRef = useRef<HTMLDivElement | null>(null);
   const mainRef = useRef<HTMLDivElement | null>(null);
@@ -320,6 +667,15 @@ export default function Home() {
   const greetingStageRef = useRef<HTMLDivElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement | null>(null);
   const progressValueRef = useRef<HTMLSpanElement | null>(null);
+
+  const aboutWords = profileContent.bio.split(" ");
+  const displayNameParts = profileContent.displayName.split(" ");
+  const primaryName = displayNameParts[0] ?? fallbackProfile.displayName;
+  const secondaryName =
+    displayNameParts.slice(1).join(" ") || displayNameParts[0] || "";
+  const primarySocialLinks = socialItems.slice(0, 3);
+  const roleTitle =
+    profileContent.headline.split("—")[0]?.trim() || "Fullstack Developer";
 
   const { scrollYProgress: overlayProgress } = useScroll({
     target: overlaySectionRef,
@@ -499,6 +855,95 @@ export default function Home() {
   }, [isIntroFinished]);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function loadContent() {
+      const [
+        profileResult,
+        stackResult,
+        projectResult,
+        socialResult,
+        educationResult,
+        courseworkResult,
+      ] =
+        await Promise.all([
+          supabase
+            .from("profile")
+            .select("display_name, headline, bio, location, availability, cv_url")
+            .eq("is_public", true)
+            .order("updated_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("stack_items")
+            .select("name, category, icon_url")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+          supabase
+            .from("projects")
+            .select(
+              "title, slug, category, summary, cover_image_url, gallery, stack, year, live_url",
+            )
+            .eq("status", "published")
+            .order("sort_order", { ascending: true })
+            .order("year", { ascending: false }),
+          supabase
+            .from("social_links")
+            .select("label, url")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+          supabase
+            .from("education")
+            .select("institution, degree, graduation_label")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true })
+            .limit(1),
+          supabase
+            .from("coursework")
+            .select("label")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+        ]);
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (!profileResult.error) {
+        setProfileContent(buildProfileContent(profileResult.data));
+      }
+
+      if (!stackResult.error) {
+        setStackSections(buildStackSections(stackResult.data));
+      }
+
+      if (!projectResult.error) {
+        const nextProjectItems = buildProjectItems(projectResult.data);
+        setProjectItems(nextProjectItems);
+        setProjectSlideIndexes(nextProjectItems.map(() => 0));
+      }
+
+      if (!socialResult.error) {
+        setSocialItems(buildSocialItems(socialResult.data));
+      }
+
+      if (!educationResult.error) {
+        setEducationContent(buildEducationContent(educationResult.data));
+      }
+
+      if (!courseworkResult.error) {
+        setCourseworkItems(buildCourseworkItems(courseworkResult.data));
+      }
+    }
+
+    void loadContent();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!mainRef.current || !introRef.current) {
       return;
     }
@@ -642,6 +1087,25 @@ export default function Home() {
     };
   }, [progress]);
 
+  useEffect(() => {
+    if (projectItems.length === 0) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setProjectSlideIndexes((current) =>
+        current.map(
+          (index, projectIndex) =>
+            (index + 1) % projectItems[projectIndex].screens.length,
+        ),
+      );
+    }, 2800);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [projectItems]);
+
   const currentGreeting = greetings[greetingIndex];
 
   return (
@@ -706,18 +1170,18 @@ export default function Home() {
                   fontWeight="600"
                 >
                   <textPath href="#portfolio-badge-path">
-                    FULLSTACK DEVELOPER • AKBAR RAYYAN •
+                    FULLSTACK DEVELOPER • {profileContent.displayName.toUpperCase()} •
                   </textPath>
                 </text>
               </svg>
               <div className="hidden items-center gap-6 lg:flex">
                 <span>Portfolio 2026</span>
                 <span className="h-px w-8 bg-white/16" />
-                <span>Indonesia</span>
+                <span>{profileContent.location}</span>
                 <span className="h-px w-8 bg-white/16" />
                 <span className="inline-flex items-center gap-2 normal-case tracking-normal text-white/72">
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(74,222,128,0.6)]" />
-                  Available for work
+                  {profileContent.availability}
                 </span>
               </div>
             </motion.div>
@@ -787,11 +1251,11 @@ export default function Home() {
                 <p className="text-[0.72rem] uppercase tracking-[0.18em] text-white/42">
                   Portfolio 2026
                   <span className="mx-2 text-white/28">—</span>
-                  Indonesia
+                  {profileContent.location}
                 </p>
                 <p className="inline-flex items-center gap-2 text-sm text-white/78">
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(74,222,128,0.6)]" />
-                  Available for work
+                  {profileContent.availability}
                 </p>
               </motion.div>
               <motion.h1
@@ -799,9 +1263,9 @@ export default function Home() {
                 className="max-w-5xl text-[3.4rem] leading-[0.92] tracking-[-0.03em] text-white sm:text-[6.2rem] sm:leading-[0.9] sm:tracking-[-0.035em] lg:text-[8.4rem] xl:text-[9.8rem]"
                 style={{ fontFamily: 'var(--font-bungee)' }}
               >
-                Akbar
+                {primaryName}
                 <br />
-                Rayyan
+                {secondaryName}
               </motion.h1>
 
               <motion.div
@@ -810,10 +1274,7 @@ export default function Home() {
                 style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
               >
                 <p className="text-[1.05rem] font-semibold text-white/86">
-                  Fullstack Developer
-                </p>
-                <p className="text-[1.05rem] font-semibold text-white/72">
-                  Backend & API Developer
+                  {roleTitle}
                 </p>
               </motion.div>
 
@@ -822,8 +1283,7 @@ export default function Home() {
                 className="max-w-md text-sm leading-7 text-white/62 sm:max-w-xl sm:text-[1.05rem] sm:leading-[1.6]"
                 style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
               >
-                Fullstack Developer — focused on building fast, reliable, and
-                scalable digital products.
+                {profileContent.headline}
               </motion.p>
             </div>
 
@@ -838,7 +1298,7 @@ export default function Home() {
                     Role
                   </p>
                   <p className="text-[1rem] leading-[1.42] font-semibold text-white/82 sm:text-[1.62rem]">
-                    Fullstack Developer
+                    {roleTitle}
                   </p>
                 </motion.div>
                 <motion.div
@@ -850,8 +1310,9 @@ export default function Home() {
                     Focus
                   </p>
                   <p className="text-[1rem] leading-[1.46] font-semibold text-white/72 sm:text-[1.5rem]">
-                    Web Platforms
-                    <br />&amp; APIs
+                    {profileContent.location}
+                    <br />
+                    Building Digital Products
                   </p>
                 </motion.div>
               </motion.div>
@@ -878,32 +1339,21 @@ export default function Home() {
             >
               <motion.a
                 variants={heroItem}
-                href="#about"
+                href={profileContent.cvUrl}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-black transition-transform duration-300 hover:-translate-y-0.5 sm:h-12 sm:justify-start sm:px-7"
               >
                 Download CV
               </motion.a>
-              <motion.a
-                variants={heroItem}
-                href="https://linkedin.com"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-white/15 px-5 text-sm text-white/78 transition-colors duration-300 hover:border-white/28 hover:text-white sm:h-12 sm:justify-start sm:px-6"
-              >
-                LinkedIn ↗
-              </motion.a>
-              <motion.a
-                variants={heroItem}
-                href="https://github.com"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-white/15 px-5 text-sm text-white/78 transition-colors duration-300 hover:border-white/28 hover:text-white sm:h-12 sm:justify-start sm:px-6"
-              >
-                GitHub ↗
-              </motion.a>
-              <motion.a
-                variants={heroItem}
-                href="https://youtube.com"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-white/15 px-5 text-sm text-white/78 transition-colors duration-300 hover:border-white/28 hover:text-white sm:h-12 sm:justify-start sm:px-6"
-              >
-                Youtube ↗
-              </motion.a>
+              {primarySocialLinks.map((item) => (
+                <motion.a
+                  key={item.label}
+                  variants={heroItem}
+                  href={item.url}
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-white/15 px-5 text-sm text-white/78 transition-colors duration-300 hover:border-white/28 hover:text-white sm:h-12 sm:justify-start sm:px-6"
+                >
+                  {item.label} ↗
+                </motion.a>
+              ))}
             </motion.div>
 
             <motion.div
@@ -1057,15 +1507,15 @@ export default function Home() {
                         variants={overlayMaskText}
                         className="text-[1.5rem] leading-[0.98] font-black tracking-[-0.05em] text-[#6f5bf3] sm:text-[3.35rem] lg:text-[4rem]"
                       >
-                        Politeknik Negeri Indramayu
+                        {educationContent.institution}
                       </motion.h3>
                     </motion.div>
                     <div className="space-y-1 text-white/92">
                       <p className="text-[1.05rem] font-semibold sm:text-[1.35rem]">
-                        Teknik Informatika
+                        {educationContent.degree}
                       </p>
                       <p className="text-base text-white/72 sm:text-lg">
-                        Graduated Oct - 2025
+                        {educationContent.graduationLabel}
                       </p>
                     </div>
                   </motion.div>
@@ -1075,12 +1525,7 @@ export default function Home() {
                       03 — Relevant Coursework
                     </p>
                     <div className="flex flex-wrap gap-3 sm:gap-4">
-                      {[
-                        "Web Programming",
-                        "Backend Development",
-                        "AI & ML Enthusiast",
-                        "UI/UX Design",
-                      ].map((item) => (
+                      {courseworkItems.map((item) => (
                         <span
                           key={item}
                           className="inline-flex rounded-full bg-black px-4 py-2 text-sm font-medium text-[#6f5bf3] sm:px-6 sm:py-3 sm:text-lg"
@@ -1140,6 +1585,195 @@ export default function Home() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </motion.section>
+
+            <motion.section
+              variants={overlayItem}
+              id="projects"
+              className="border-t border-white/8 bg-[#050505] px-4 py-12 text-white sm:px-10 sm:py-16 lg:px-12 xl:px-16"
+            >
+              <div className="space-y-10 sm:space-y-14">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="space-y-4">
+                    <p
+                      className="text-[0.72rem] uppercase tracking-[0.34em] text-white/38"
+                      style={{ fontFamily: "var(--font-bungee)" }}
+                    >
+                      05 — Projects
+                    </p>
+                    <h2
+                      className="max-w-[9ch] text-[2.8rem] leading-[0.92] tracking-[-0.08em] text-white sm:text-[4.9rem] lg:text-[6.6rem]"
+                      style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                    >
+                      Selected Work & Product Ideas.
+                    </h2>
+                  </div>
+
+                  <p
+                    className="max-w-xl text-sm leading-7 text-white/58 sm:text-[1rem] sm:leading-8"
+                    style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                  >
+                    A preview of the project area that will later be connected to
+                    Supabase, so portfolio entries can be managed directly from an
+                    admin dashboard.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 lg:grid-cols-3">
+                  {projectItems.map((project, index) => (
+                    <motion.article
+                      key={project.title}
+                      variants={overlayItem}
+                      transition={{ delay: 0.08 + index * 0.08 }}
+                      className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 sm:p-6"
+                    >
+                      <div
+                        aria-hidden="true"
+                        className={`absolute inset-0 bg-gradient-to-br ${project.accent} opacity-80 transition-transform duration-500 group-hover:scale-[1.03]`}
+                      />
+                      <div className="absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(255,255,255,0.1),transparent)] opacity-50" />
+
+                      <div className="relative flex h-full flex-col gap-8">
+                        <div className="flex items-start justify-between gap-4">
+                          <div
+                            className="text-[0.72rem] uppercase tracking-[0.34em] text-white/38"
+                            style={{ fontFamily: "var(--font-bungee)" }}
+                          >
+                            {project.index}
+                          </div>
+                          <div
+                            className="rounded-full border border-white/12 bg-black/30 px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] text-white/60"
+                            style={{ fontFamily: "var(--font-bungee)" }}
+                          >
+                            {project.year}
+                          </div>
+                        </div>
+
+                        <div className="relative overflow-hidden rounded-[1.4rem] border border-white/10 bg-black/40 p-2">
+                          <div className="mb-2 flex items-center gap-1.5 px-1.5">
+                            <span className="h-2 w-2 rounded-full bg-white/26" />
+                            <span className="h-2 w-2 rounded-full bg-white/18" />
+                            <span className="h-2 w-2 rounded-full bg-white/12" />
+                          </div>
+
+                          <div className="relative aspect-[1.2/1] overflow-hidden rounded-[1rem] bg-[#070707]">
+                            <AnimatePresence mode="wait">
+                              <motion.div
+                                key={`${project.title}-${projectSlideIndexes[index]}`}
+                                initial={{ opacity: 0, x: 28, scale: 1.02 }}
+                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                exit={{ opacity: 0, x: -28, scale: 0.985 }}
+                                transition={{
+                                  duration: 0.75,
+                                  ease: [0.22, 1, 0.36, 1],
+                                }}
+                                className={`absolute inset-0 bg-gradient-to-br ${project.screens[projectSlideIndexes[index]].surfaceClass}`}
+                              >
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_28%)]" />
+                                <div className="absolute inset-x-4 top-4 h-7 rounded-full border border-white/8 bg-black/28" />
+                                <div className="absolute left-4 top-16 h-[42%] w-[42%] rounded-[1rem] border border-white/10 bg-black/28" />
+                                <div className="absolute right-4 top-16 h-[22%] w-[42%] rounded-[1rem] border border-white/10 bg-black/32" />
+                                <div className="absolute right-4 top-[calc(16%+5.5rem)] h-[28%] w-[42%] rounded-[1rem] border border-white/10 bg-black/22" />
+                                <div className="absolute bottom-4 left-4 right-4 h-[20%] rounded-[1rem] border border-white/10 bg-black/26" />
+
+                                <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-4">
+                                  <div className="space-y-2">
+                                    <p
+                                      className="text-[0.65rem] uppercase tracking-[0.22em] text-white/46"
+                                      style={{ fontFamily: "var(--font-bungee)" }}
+                                    >
+                                      {
+                                        project.screens[projectSlideIndexes[index]]
+                                          .eyebrow
+                                      }
+                                    </p>
+                                    <p
+                                      className="text-lg leading-none tracking-[-0.04em] text-white sm:text-[1.4rem]"
+                                      style={{
+                                        fontFamily:
+                                          '"Helvetica Neue", Arial, sans-serif',
+                                      }}
+                                    >
+                                      {
+                                        project.screens[projectSlideIndexes[index]]
+                                          .title
+                                      }
+                                    </p>
+                                  </div>
+
+                                  <div className="flex gap-1.5">
+                                    {project.screens.map((screen, screenIndex) => (
+                                      <span
+                                        key={`${project.title}-${screen.eyebrow}`}
+                                        className={`h-1.5 rounded-full transition-all duration-500 ${
+                                          screenIndex === projectSlideIndexes[index]
+                                            ? "w-8 bg-white"
+                                            : "w-3 bg-white/24"
+                                        }`}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              </motion.div>
+                            </AnimatePresence>
+                          </div>
+                        </div>
+
+                        <div className="space-y-5">
+                          <div
+                            className="inline-flex rounded-full border border-white/12 bg-black/35 px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] text-white/64"
+                            style={{ fontFamily: "var(--font-bungee)" }}
+                          >
+                            {project.category}
+                          </div>
+
+                          <div className="space-y-4">
+                            <h3
+                              className="max-w-[10ch] text-[2rem] leading-[0.92] tracking-[-0.06em] text-white sm:text-[2.45rem]"
+                              style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                            >
+                              {project.title}
+                            </h3>
+                            <p
+                              className="text-sm leading-7 text-white/68 sm:text-[0.98rem] sm:leading-8"
+                              style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                            >
+                              {project.summary}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-auto space-y-5">
+                          <div className="flex flex-wrap gap-2.5">
+                            {project.stack.map((item) => (
+                              <span
+                                key={item}
+                                className="inline-flex rounded-full border border-white/10 bg-black/40 px-3 py-2 text-[0.72rem] uppercase tracking-[0.08em] text-white/76"
+                                style={{ fontFamily: "var(--font-bungee)" }}
+                              >
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div
+                            className="flex items-center justify-between border-t border-white/10 pt-4 text-[0.74rem] uppercase tracking-[0.18em] text-white/46"
+                            style={{ fontFamily: "var(--font-bungee)" }}
+                          >
+                            <span>Case Study</span>
+                            <a
+                              href={project.liveUrl}
+                              className="transition-opacity duration-300 hover:opacity-80"
+                            >
+                              Preview ↗
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.article>
+                  ))}
+                </div>
               </div>
             </motion.section>
           </motion.div>
@@ -1337,15 +1971,15 @@ export default function Home() {
                 <div className="flex flex-wrap gap-x-3 gap-y-2 text-[0.72rem] text-white sm:text-[0.9rem]">
                   {socialItems.map((item) => (
                     <a
-                      key={item}
-                      href="#"
+                      key={item.label}
+                      href={item.url}
                       onClick={() => {
                         setIsMenuOpen(false);
                       }}
                       className="transition-opacity duration-300 hover:opacity-70"
                       style={{ fontFamily: "var(--font-bungee)" }}
                     >
-                      {item}
+                      {item.label}
                     </a>
                   ))}
                 </div>
