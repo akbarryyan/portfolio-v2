@@ -222,7 +222,7 @@ function StatCard({
 function SidebarGlyph({ label }: Readonly<{ label: string }>) {
   if (label === "Overview") {
     return (
-      <svg viewBox="0 0 24 24" className="h-[1.22rem] w-[1.22rem]" fill="none">
+      <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
         <path
           d="M5.5 10.5 12 5l6.5 5.5V18a1 1 0 0 1-1 1h-3.5v-4h-4v4H6.5a1 1 0 0 1-1-1v-7.5Z"
           fill="currentColor"
@@ -233,7 +233,7 @@ function SidebarGlyph({ label }: Readonly<{ label: string }>) {
 
   if (label === "Content") {
     return (
-      <svg viewBox="0 0 24 24" className="h-[1.22rem] w-[1.22rem]" fill="none">
+      <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
         <path
           d="M12 4a8 8 0 1 0 8 8h-8V4Z"
           fill="currentColor"
@@ -246,7 +246,7 @@ function SidebarGlyph({ label }: Readonly<{ label: string }>) {
 
   if (label === "Media") {
     return (
-      <svg viewBox="0 0 24 24" className="h-[1.22rem] w-[1.22rem]" fill="none">
+      <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
         <path
           d="M7 4.5h7l3 3V19a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"
           stroke="currentColor"
@@ -260,7 +260,7 @@ function SidebarGlyph({ label }: Readonly<{ label: string }>) {
 
   if (label === "Messages") {
     return (
-      <svg viewBox="0 0 24 24" className="h-[1.22rem] w-[1.22rem]" fill="none">
+      <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
         <path
           d="M6 7.5h12a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 18 16.5H11l-3.5 3v-3H6A1.5 1.5 0 0 1 4.5 15V9A1.5 1.5 0 0 1 6 7.5Z"
           fill="currentColor"
@@ -270,10 +270,50 @@ function SidebarGlyph({ label }: Readonly<{ label: string }>) {
   }
 
   return (
-    <svg viewBox="0 0 24 24" className="h-[1.22rem] w-[1.22rem]" fill="none">
+    <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
       <path
         d="M12 7.25a4.75 4.75 0 1 0 0 9.5 4.75 4.75 0 0 0 0-9.5Zm0-3.25 1.2 1.65 2.04-.28.53 1.98 1.89.82-.82 1.89 1.19 1.7-1.7 1.2.28 2.04-1.98.53-.82 1.89-1.89-.82-1.7 1.19-1.2-1.7-2.04.28-.53-1.98-1.89-.82.82-1.89L4 12l1.7-1.2-.28-2.04 1.98-.53.82-1.89 1.89.82L12 4Z"
         fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function NotificationIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.4rem] w-[1.4rem]" fill="none">
+      <path
+        d="M8.5 18.5h7m-5.5 0a2 2 0 0 0 4 0m-7-2.5h10l-1.2-1.8V11a3.8 3.8 0 1 0-7.6 0v3.2L7 16Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ProfileIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.4rem] w-[1.4rem]" fill="none">
+      <path
+        d="M12 12a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Zm-6 7a6 6 0 0 1 12 0"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.15rem] w-[1.15rem]" fill="none">
+      <path
+        d="M11 6a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm7 12-3.2-3.2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -682,21 +722,6 @@ export default function AdminPage() {
     await loadDashboard();
   }
 
-  const storagePercent = Math.min(
-    92,
-    Math.max(
-      18,
-      Math.round(
-        (projects.length * 14 +
-          stackItems.length * 5 +
-          socialLinks.length * 4 +
-          educationRows.length * 6 +
-          courseworkRows.length * 3) /
-          2,
-      ),
-    ),
-  );
-
   const recentContent = projects.slice(0, 5);
   const sidebarItems = [
     { label: "Overview" },
@@ -711,23 +736,23 @@ export default function AdminPage() {
 
   return (
     <main
-      className="min-h-screen bg-[#eeebff] text-[#2f245b]"
+      className="h-screen overflow-hidden bg-[#eeebff] text-[#2f245b]"
       style={{ fontFamily: "var(--font-bungee)" }}
     >
-      <div className="grid min-h-screen w-full overflow-hidden bg-[#5429cf] shadow-[0_24px_90px_rgba(96,70,193,0.16)] lg:grid-cols-[96px_1fr]">
-        <aside className="relative z-0 flex flex-col px-4 py-8 text-[#14c1e7]">
+      <div className="grid h-screen w-full overflow-hidden bg-[#5429cf] shadow-[0_24px_90px_rgba(96,70,193,0.16)] lg:grid-cols-[108px_1fr]">
+        <aside className="z-0 flex h-screen flex-col px-4 py-8 text-[#14c1e7]">
           <div
-            className="pl-1 text-left text-[0.84rem] leading-none tracking-[0.02em] font-bold"
+            className="text-center text-[0.84rem] leading-none tracking-[0.02em] font-bold"
             style={{ fontFamily: "var(--font-bungee)" }}
           >
-            CLOUD
+            AKBAR
           </div>
           <div className="mt-10 flex flex-1 flex-col items-center gap-6">
             {sidebarItems.map((item, index) => (
               <button
                 key={item.label}
                 type="button"
-                className={`flex h-12 w-12 items-center justify-center rounded-[1rem] transition ${
+                className={`flex h-[3.15rem] w-[3.15rem] items-center justify-center rounded-[1rem] transition ${
                   index === 0
                     ? "bg-[#4520b8] text-[#12d3ef] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     : "text-[#12d3ef] hover:bg-white/8"
@@ -741,7 +766,7 @@ export default function AdminPage() {
           <div className="flex justify-center pt-3">
             <button
               type="button"
-              className="flex h-12 w-12 items-center justify-center rounded-[1rem] text-[#12d3ef] transition hover:bg-white/8"
+              className="flex h-[3.15rem] w-[3.15rem] items-center justify-center rounded-[1rem] text-[#12d3ef] transition hover:bg-white/8"
               aria-label="Settings"
             >
               <SidebarGlyph label="Settings" />
@@ -749,20 +774,29 @@ export default function AdminPage() {
           </div>
         </aside>
 
-        <div className="relative z-10 -ml-2 grid min-h-full rounded-l-[2.2rem] bg-white xl:grid-cols-[1.3fr_0.58fr]">
-          <section className="border-b border-[#efe9ff] px-5 py-4 sm:px-6 lg:border-b-0 lg:border-r">
+        <div className="relative z-10 -ml-2 h-screen overflow-y-auto rounded-l-[2.2rem] bg-white">
+          <section className="px-5 py-4 sm:px-6">
             <div className="space-y-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex-1 rounded-2xl bg-[#f4f0ff] px-4 py-3 text-sm text-[#8d83bc]">
-                  Search
+                <div className="flex flex-1 items-center gap-3 rounded-[1.35rem] bg-[#f4f0ff] px-4 py-3 text-sm text-[#8d83bc]">
+                  <SearchIcon />
+                  <span>Search</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f4f0ff] text-lg">
-                    🔔
-                  </div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f4f0ff] text-lg">
-                    👤
-                  </div>
+                  <button
+                    type="button"
+                    className="flex h-11 w-11 items-center justify-center text-[#5b33d6] transition hover:opacity-75"
+                    aria-label="Notifications"
+                  >
+                    <NotificationIcon />
+                  </button>
+                  <button
+                    type="button"
+                    className="flex h-11 w-11 items-center justify-center text-[#5b33d6] transition hover:opacity-75"
+                    aria-label="Profile"
+                  >
+                    <ProfileIcon />
+                  </button>
                 </div>
               </div>
 
@@ -885,6 +919,33 @@ export default function AdminPage() {
                       <StatCard label="Stack" value={String(stackItems.length)} />
                       <StatCard label="Education" value={String(educationRows.length)} />
                       <StatCard label="Coursework" value={String(courseworkRows.length)} />
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.6rem] bg-[#f7f4ff] px-5 py-4">
+                      <p className="text-sm text-[#786ea6]">
+                        {sessionEmail} • connected to {process.env.NEXT_PUBLIC_SUPABASE_URL} •{" "}
+                        {socialLinks.length} social links
+                      </p>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          className={secondaryButtonClass}
+                          onClick={() => {
+                            void loadDashboard();
+                          }}
+                        >
+                          Refresh Data
+                        </button>
+                        <button
+                          type="button"
+                          className={secondaryButtonClass}
+                          onClick={() => {
+                            void handleSignOut();
+                          }}
+                        >
+                          Sign Out
+                        </button>
+                      </div>
                     </div>
 
                     {(dashboardError || successMessage || authMessage) && (
@@ -1323,104 +1384,6 @@ export default function AdminPage() {
               )}
             </div>
           </section>
-
-          <aside className="bg-[#faf8ff] px-4 py-4 sm:px-5">
-            <div className="space-y-5">
-              <div className="rounded-[1.8rem] bg-[#5b33d6] p-5 text-white shadow-[0_18px_40px_rgba(91,51,214,0.28)]">
-                <p className="text-sm text-white/80">Cloud storage</p>
-                <div className="mx-auto mt-5 flex h-40 w-40 items-center justify-center rounded-full bg-[conic-gradient(#14c2e6_0deg, #14c2e6_calc(var(--storage)*1deg), rgba(255,255,255,0.14)_0deg)]" style={{ ["--storage" as string]: `${storagePercent * 3.6}` }}>
-                  <div className="flex h-28 w-28 items-center justify-center rounded-full bg-[#4a24c4] text-2xl font-semibold">
-                    {storagePercent}%
-                  </div>
-                </div>
-                <div className="mt-5 flex items-center justify-between text-xs text-white/80">
-                  <span>USED {projects.length + stackItems.length} items</span>
-                  <span>LIVE {socialLinks.length + courseworkRows.length}</span>
-                </div>
-              </div>
-
-              <div className="rounded-[1.8rem] bg-[#5b33d6] p-5 text-white shadow-[0_18px_40px_rgba(91,51,214,0.16)]">
-                <div className="flex justify-center">
-                  <div className="flex h-36 w-36 items-center justify-center rounded-full bg-white text-6xl">
-                    🧑‍💻
-                  </div>
-                </div>
-                <p className="mt-5 text-center text-lg leading-8">
-                  Keep your portfolio content updated and ready to publish.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void loadDashboard();
-                  }}
-                  className="mx-auto mt-6 flex h-11 items-center justify-center rounded-full bg-[#16c1e7] px-8 text-sm font-semibold text-white"
-                >
-                  Refresh
-                </button>
-              </div>
-
-              <div className="rounded-[1.8rem] border border-[#ebe6ff] bg-white p-5">
-                <p
-                  className="text-[0.72rem] uppercase tracking-[0.16em] text-[#6d5ad7]"
-                  style={{ fontFamily: "var(--font-bungee)" }}
-                >
-                  Quick Actions
-                </p>
-                <div className="mt-4 grid gap-3">
-                  <button type="button" className={secondaryButtonClass} onClick={() => { void loadDashboard(); }}>
-                    Refresh Data
-                  </button>
-                  <button type="button" className={secondaryButtonClass} onClick={() => { void handleSignOut(); }}>
-                    Sign Out
-                  </button>
-                </div>
-                <div className="mt-5 space-y-3 text-sm text-[#7a70aa]">
-                  <p>Connection</p>
-                  <p className="break-all text-[#43357b]">
-                    {process.env.NEXT_PUBLIC_SUPABASE_URL}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-[1.8rem] border border-[#ebe6ff] bg-white p-5">
-                <p
-                  className="text-[0.72rem] uppercase tracking-[0.16em] text-[#6d5ad7]"
-                  style={{ fontFamily: "var(--font-bungee)" }}
-                >
-                  Content Rows
-                </p>
-                <div className="mt-4 space-y-3">
-                  {[...projects.slice(0, 2), ...stackItems.slice(0, 1)].map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-start justify-between rounded-[1.2rem] bg-[#f6f2ff] px-4 py-3"
-                    >
-                      <div>
-                        <p className="text-sm text-[#2f245b]">
-                          {"title" in item ? item.title : item.name}
-                        </p>
-                        <p className="text-xs text-[#9489be]">
-                          {"slug" in item ? item.slug : item.category}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void removeRow(
-                            "title" in item ? "projects" : "stack_items",
-                            item.id,
-                          );
-                        }}
-                        className="text-sm text-[#5b33d6]"
-                      >
-                        •••
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </main>
