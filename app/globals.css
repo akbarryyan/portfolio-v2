@@ -99,7 +99,7 @@ body {
 .portfolio-band {
   position: absolute;
   border-radius: 999px;
-  opacity: 0.38;
+  opacity: 0.28;
   background:
     linear-gradient(
       90deg,
@@ -110,10 +110,10 @@ body {
       rgba(202, 182, 255, 0.16) 70%,
       transparent 100%
     );
-  box-shadow:
-    inset 0 0 22px rgba(255, 255, 255, 0.04),
-    0 0 80px rgba(218, 198, 232, 0.08);
-  filter: blur(52px);
+  box-shadow: 0 0 48px rgba(218, 198, 232, 0.06);
+  filter: blur(34px);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .portfolio-side-label {
@@ -152,6 +152,7 @@ body {
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 28%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 42%);
   background-size: 160% 160%, 180% 180%;
+  transform: translateZ(0);
 }
 
 .stack-marquee {
@@ -165,6 +166,8 @@ body {
   align-items: center;
   gap: 2rem;
   padding-right: 2rem;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .stack-marquee__item {
@@ -198,5 +201,14 @@ body {
 @media (min-width: 1024px) {
   .intro-grid {
     padding: 1.9rem 1.9rem 2.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-band,
+  .stack-marquee__track,
+  .portfolio-blue-panel {
+    animation: none !important;
+    transition: none !important;
   }
 }

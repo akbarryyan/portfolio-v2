@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
@@ -9,6 +9,7 @@ import {
   useSpring,
   useTransform,
   useInView,
+  useReducedMotion,
 } from "framer-motion";
 import gsap from "gsap";
 import Lenis from "lenis";
@@ -483,12 +484,10 @@ const heroItem = {
   hidden: {
     opacity: 0,
     y: 36,
-    filter: "blur(10px)",
   },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: {
       duration: 0.8,
       ease: [0.22, 1, 0.36, 1] as const,
@@ -500,12 +499,10 @@ const overlayColumn = {
   hidden: {
     opacity: 0,
     y: 54,
-    filter: "blur(14px)",
   },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: {
       duration: 0.9,
       ease: [0.16, 1, 0.3, 1] as const,
@@ -519,12 +516,10 @@ const overlayItem = {
   hidden: {
     opacity: 0,
     y: 26,
-    filter: "blur(10px)",
   },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: {
       duration: 0.72,
       ease: [0.16, 1, 0.3, 1] as const,
@@ -546,12 +541,10 @@ const overlayTextWord = {
   hidden: {
     opacity: 1,
     color: "rgba(255,255,255,0.12)",
-    filter: "blur(1px)",
   },
   show: {
     opacity: 1,
     color: "rgba(255,255,255,0.98)",
-    filter: "blur(0px)",
     transition: {
       duration: 0.8,
       ease: [0.16, 1, 0.3, 1] as const,
@@ -576,12 +569,10 @@ const overlayMaskText = {
   hidden: {
     opacity: 0,
     x: -34,
-    filter: "blur(10px)",
   },
   show: {
     opacity: 1,
     x: 0,
-    filter: "blur(0px)",
     transition: {
       duration: 0.72,
       delay: 0.14,
@@ -639,6 +630,7 @@ function StackGlyph({
 const supabase = createBrowserSupabaseClient();
 
 export default function Home() {
+  const prefersReducedMotion = useReducedMotion();
   const [greetingIndex, setGreetingIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isIntroFinished, setIsIntroFinished] = useState(false);
@@ -668,7 +660,10 @@ export default function Home() {
   const progressBarRef = useRef<HTMLDivElement | null>(null);
   const progressValueRef = useRef<HTMLSpanElement | null>(null);
 
-  const aboutWords = profileContent.bio.split(" ");
+  const aboutWords = useMemo(
+    () => profileContent.bio.split(" "),
+    [profileContent.bio],
+  );
   const displayNameParts = profileContent.displayName.split(" ");
   const primaryName = displayNameParts[0] ?? fallbackProfile.displayName;
   const secondaryName =
@@ -687,8 +682,8 @@ export default function Home() {
   });
 
   const springConfig = {
-    stiffness: 90,
-    damping: 24,
+    stiffness: 72,
+    damping: 22,
     mass: 0.6,
   };
 
@@ -720,31 +715,32 @@ export default function Home() {
     useTransform(overlayProgress, [0, 0.3, 1], [1, 0.22, 0.04]),
     springConfig,
   );
-  const heroBlur = useSpring(
-    useTransform(overlayProgress, [0, 1], [0, 18]),
+  const heroDimOpacity = useSpring(
+    useTransform(overlayProgress, [0, 0.45, 1], [0, 0.38, 0.62]),
     springConfig,
   );
-  const heroFilter = useTransform(heroBlur, (value) => `blur(${value}px)`);
 
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.15,
+      duration: prefersReducedMotion ? 0.9 : 1.05,
       smoothWheel: true,
       gestureOrientation: "vertical",
     });
 
+    let frameId = 0;
+
     const update = (time: number) => {
-      lenis.raf(time * 1000);
+      lenis.raf(time);
+      frameId = window.requestAnimationFrame(update);
     };
 
-    gsap.ticker.add(update);
-    gsap.ticker.lagSmoothing(0);
+    frameId = window.requestAnimationFrame(update);
 
     return () => {
-      gsap.ticker.remove(update);
+      window.cancelAnimationFrame(frameId);
       lenis.destroy();
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -776,13 +772,14 @@ export default function Home() {
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
+      antialias: false,
+      powerPreference: "high-performance",
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.15));
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
-    const particleCount = 96;
+    const particleCount = prefersReducedMotion ? 40 : 72;
     const positions = new Float32Array(particleCount * 3);
 
     for (let index = 0; index < particleCount; index += 1) {
@@ -817,6 +814,8 @@ export default function Home() {
 
     const clock = new THREE.Clock();
 
+    let frameId = 0;
+
     const renderFrame = () => {
       const elapsed = clock.getElapsedTime();
       particles.rotation.z = elapsed * 0.035;
@@ -824,9 +823,10 @@ export default function Home() {
       particles.position.y = Math.sin(elapsed * 0.32) * 0.12;
       glowPlane.material.opacity = 0.1 + Math.sin(elapsed * 0.45) * 0.03;
       renderer.render(scene, camera);
+      frameId = window.requestAnimationFrame(renderFrame);
     };
 
-    gsap.ticker.add(renderFrame);
+    frameId = window.requestAnimationFrame(renderFrame);
 
     const handleResize = () => {
       if (!container) {
@@ -841,7 +841,7 @@ export default function Home() {
     window.addEventListener("resize", handleResize);
 
     return () => {
-      gsap.ticker.remove(renderFrame);
+      window.cancelAnimationFrame(frameId);
       window.removeEventListener("resize", handleResize);
       geometry.dispose();
       material.dispose();
@@ -852,7 +852,7 @@ export default function Home() {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [isIntroFinished]);
+  }, [isIntroFinished, prefersReducedMotion]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1048,7 +1048,6 @@ export default function Home() {
         {
           autoAlpha: 0,
           y: -16,
-          filter: "blur(8px)",
           duration: 0.35,
         },
         0,
@@ -1099,12 +1098,12 @@ export default function Home() {
             (index + 1) % projectItems[projectIndex].screens.length,
         ),
       );
-    }, 2800);
+    }, prefersReducedMotion ? 4200 : 3600);
 
     return () => {
       window.clearInterval(interval);
     };
-  }, [projectItems]);
+  }, [projectItems, prefersReducedMotion]);
 
   const currentGreeting = greetings[greetingIndex];
 
@@ -1122,19 +1121,37 @@ export default function Home() {
             key={band.className}
             aria-hidden="true"
             className={`portfolio-band ${band.className}`}
-            animate={{
-              x: [0, 24, -18, 0],
-              y: [0, -18, 14, 0],
-            }}
-            transition={{
-              duration: band.duration,
-              repeat: Number.POSITIVE_INFINITY,
-              repeatType: "mirror",
-              ease: "easeInOut",
-              delay: band.delay,
-            }}
+            animate={
+              isIntroFinished && !prefersReducedMotion
+                ? {
+                    x: [0, 18, -12, 0],
+                    y: [0, -12, 10, 0],
+                  }
+                : {
+                    x: 0,
+                    y: 0,
+                  }
+            }
+            transition={
+              isIntroFinished && !prefersReducedMotion
+                ? {
+                    duration: band.duration,
+                    repeat: Number.POSITIVE_INFINITY,
+                    repeatType: "mirror",
+                    ease: "easeInOut",
+                    delay: band.delay,
+                  }
+                : {
+                    duration: 0.3,
+                  }
+            }
           />
         ))}
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-black"
+          style={{ opacity: heroDimOpacity }}
+        />
         <motion.section
           variants={heroContainer}
           initial="hidden"
@@ -1144,7 +1161,6 @@ export default function Home() {
             y: heroTranslateY,
             scale: heroScale,
             opacity: heroOpacity,
-            filter: heroFilter,
           }}
         >
           <div className="flex items-start justify-between gap-3 sm:gap-4">
@@ -1447,33 +1463,37 @@ export default function Home() {
                 whileInView="show"
                 viewport={{ once: true, amount: 0.25 }}
                 variants={overlayColumn}
-                className="portfolio-blue-panel min-h-screen px-4 py-10 text-black sm:px-10 sm:py-14 lg:px-12 xl:px-16"
-                animate={
-                  isRightOverlayInView
-                    ? {
-                        backgroundPosition: [
-                          "0% 0%, 0% 0%",
-                          "100% 0%, 0% 100%",
-                          "0% 0%, 0% 0%",
-                        ],
-                      }
-                    : {
-                        backgroundPosition: "0% 0%, 0% 0%",
-                      }
-                }
-                transition={
-                  isRightOverlayInView
-                    ? {
-                        duration: 14,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }
-                    : undefined
-                }
+                className="portfolio-blue-panel relative min-h-screen overflow-hidden px-4 py-10 text-black sm:px-10 sm:py-14 lg:px-12 xl:px-16"
               >
                 <motion.div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-[-12%] bg-[radial-gradient(circle_at_24%_18%,rgba(255,255,255,0.16),transparent_26%),radial-gradient(circle_at_80%_72%,rgba(255,255,255,0.12),transparent_24%)]"
+                  animate={
+                    isRightOverlayInView && !prefersReducedMotion
+                      ? {
+                          x: ["-2%", "4%", "-1%"],
+                          y: ["0%", "-3%", "0%"],
+                          scale: [1, 1.04, 1],
+                        }
+                      : {
+                          x: "0%",
+                          y: "0%",
+                          scale: 1,
+                        }
+                  }
+                  transition={
+                    isRightOverlayInView && !prefersReducedMotion
+                      ? {
+                          duration: 15,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: "easeInOut",
+                        }
+                      : { duration: 0.3 }
+                  }
+                />
+                <motion.div
                   variants={overlayColumn}
-                  className="flex h-full flex-col justify-start gap-10 sm:gap-18"
+                  className="relative flex h-full flex-col justify-start gap-10 sm:gap-18"
                   style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
                 >
                   <motion.div variants={overlayItem} className="space-y-5">
@@ -1562,12 +1582,20 @@ export default function Home() {
                     <div className="stack-marquee">
                       <motion.div
                         className="stack-marquee__track"
-                        animate={{ x: ["0%", "-50%"] }}
-                        transition={{
-                          duration: 26 + sectionIndex * 4,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: "linear",
-                        }}
+                        animate={
+                          prefersReducedMotion
+                            ? { x: "0%" }
+                            : { x: ["0%", "-50%"] }
+                        }
+                        transition={
+                          prefersReducedMotion
+                            ? { duration: 0.3 }
+                            : {
+                                duration: 34 + sectionIndex * 5,
+                                repeat: Number.POSITIVE_INFINITY,
+                                ease: "linear",
+                              }
+                        }
                       >
                         {[...section.items, ...section.items].map((item, index) => (
                           <div
@@ -1661,11 +1689,11 @@ export default function Home() {
                             <AnimatePresence mode="wait">
                               <motion.div
                                 key={`${project.title}-${projectSlideIndexes[index]}`}
-                                initial={{ opacity: 0, x: 28, scale: 1.02 }}
-                                animate={{ opacity: 1, x: 0, scale: 1 }}
-                                exit={{ opacity: 0, x: -28, scale: 0.985 }}
+                                initial={{ opacity: 0, x: 18 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -18 }}
                                 transition={{
-                                  duration: 0.75,
+                                  duration: prefersReducedMotion ? 0.45 : 0.62,
                                   ease: [0.22, 1, 0.36, 1],
                                 }}
                                 className={`absolute inset-0 bg-gradient-to-br ${project.screens[projectSlideIndexes[index]].surfaceClass}`}
@@ -1811,20 +1839,17 @@ export default function Home() {
                     initial={{
                       opacity: 0,
                       y: "42%",
-                      filter: "blur(14px)",
                     }}
                     animate={{
                       opacity: 1,
                       y: "0%",
-                      filter: "blur(0px)",
                     }}
                     exit={{
                       opacity: 0,
                       y: "-18%",
-                      filter: "blur(12px)",
                     }}
                     transition={{
-                      duration: 1.15,
+                      duration: prefersReducedMotion ? 0.8 : 1.15,
                       ease: [0.16, 1, 0.3, 1],
                     }}
                     className="text-[2.9rem] leading-none font-medium tracking-tight text-white sm:text-[4.8rem] lg:text-[5.8rem]"
