@@ -100,6 +100,19 @@ create table if not exists public.coursework (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.experience (
+  id uuid primary key default gen_random_uuid(),
+  period text not null,
+  title text not null,
+  company text not null,
+  summary text,
+  highlights text[] not null default '{}',
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.stack_items (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -138,6 +151,9 @@ create index if not exists education_sort_idx
 create index if not exists coursework_sort_idx
   on public.coursework (sort_order);
 
+create index if not exists experience_sort_idx
+  on public.experience (sort_order);
+
 create index if not exists admin_users_email_idx
   on public.admin_users (lower(email));
 
@@ -171,6 +187,11 @@ create trigger coursework_set_updated_at
 before update on public.coursework
 for each row execute procedure public.set_updated_at();
 
+drop trigger if exists experience_set_updated_at on public.experience;
+create trigger experience_set_updated_at
+before update on public.experience
+for each row execute procedure public.set_updated_at();
+
 drop trigger if exists admin_users_set_updated_at on public.admin_users;
 create trigger admin_users_set_updated_at
 before update on public.admin_users
@@ -183,6 +204,7 @@ alter table public.stack_items enable row level security;
 alter table public.social_links enable row level security;
 alter table public.education enable row level security;
 alter table public.coursework enable row level security;
+alter table public.experience enable row level security;
 
 drop policy if exists "authenticated can read own admin row" on public.admin_users;
 create policy "authenticated can read own admin row"
@@ -287,6 +309,21 @@ using (is_active = true);
 drop policy if exists "admins can manage coursework" on public.coursework;
 create policy "admins can manage coursework"
 on public.coursework
+for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "public can read active experience" on public.experience;
+create policy "public can read active experience"
+on public.experience
+for select
+to anon, authenticated
+using (is_active = true);
+
+drop policy if exists "admins can manage experience" on public.experience;
+create policy "admins can manage experience"
+on public.experience
 for all
 to authenticated
 using (public.is_admin())

@@ -261,11 +261,39 @@ const fallbackCoursework = [
   "UI/UX Design",
 ];
 
+const fallbackExperienceItems = [
+  {
+    period: "2025 — Present",
+    title: "Freelance Fullstack Developer",
+    company: "Independent Projects",
+    summary:
+      "Designing and shipping web applications, backend services, and admin dashboards with a focus on performance, clean architecture, and scalable interfaces.",
+    highlights: ["Next.js", "Supabase", "REST APIs", "UI Systems"],
+  },
+  {
+    period: "2024 — 2025",
+    title: "Backend & Product Builder",
+    company: "Personal Product Exploration",
+    summary:
+      "Built experimental platforms for portfolio CMS, API monitoring, and content workflows while strengthening database design, authentication, and deployment practices.",
+    highlights: ["Node.js", "PostgreSQL", "Prisma", "Docker"],
+  },
+  {
+    period: "2022 — 2024",
+    title: "Software Engineering Learner",
+    company: "Academic & Intensive Practice",
+    summary:
+      "Developed a strong foundation through practical coursework, self-driven learning, and hands-on projects covering web development, backend systems, and application problem-solving.",
+    highlights: ["Web Apps", "Backend Logic", "Database Design", "AI Basics"],
+  },
+];
+
 type StackSection = (typeof fallbackStackSections)[number];
 type ProjectItem = (typeof fallbackProjectItems)[number];
 type SocialItem = (typeof fallbackSocialItems)[number];
 type ProfileContent = typeof fallbackProfile;
 type EducationContent = typeof fallbackEducation;
+type ExperienceItem = (typeof fallbackExperienceItems)[number];
 
 type ProfileRow = {
   display_name: string;
@@ -295,6 +323,14 @@ type EducationRow = {
 
 type CourseworkRow = {
   label: string;
+};
+
+type ExperienceRow = {
+  period: string;
+  title: string;
+  company: string;
+  summary: string | null;
+  highlights: string[] | null;
 };
 
 type ProjectRow = {
@@ -467,6 +503,30 @@ function buildCourseworkItems(rows: CourseworkRow[] | null | undefined) {
   return rows.map((row) => row.label);
 }
 
+function buildExperienceItems(
+  rows: ExperienceRow[] | null | undefined,
+): ExperienceItem[] {
+  if (!rows || rows.length === 0) {
+    return fallbackExperienceItems;
+  }
+
+  return rows.map((row, index) => {
+    const fallbackItem =
+      fallbackExperienceItems[index % fallbackExperienceItems.length];
+
+    return {
+      period: row.period || fallbackItem.period,
+      title: row.title || fallbackItem.title,
+      company: row.company || fallbackItem.company,
+      summary: row.summary || fallbackItem.summary,
+      highlights:
+        row.highlights && row.highlights.length > 0
+          ? row.highlights
+          : fallbackItem.highlights,
+    };
+  });
+}
+
 const GREETING_INTERVAL_MS = 2200;
 const LAST_GREETING_HOLD_MS = 900;
 
@@ -561,6 +621,8 @@ export default function Home() {
     useState<EducationContent>(fallbackEducation);
   const [courseworkItems, setCourseworkItems] =
     useState<string[]>(fallbackCoursework);
+  const [experienceItems, setExperienceItems] =
+    useState<ExperienceItem[]>(fallbackExperienceItems);
   const [overlayVisitCount, setOverlayVisitCount] = useState(0);
   const [projectSlideIndexes, setProjectSlideIndexes] = useState(() =>
     fallbackProjectItems.map(() => 0),
@@ -571,6 +633,7 @@ export default function Home() {
   const threeRef = useRef<HTMLDivElement | null>(null);
   const overlaySectionRef = useRef<HTMLElement | null>(null);
   const rightOverlayRef = useRef<HTMLDivElement | null>(null);
+  const experienceSectionRef = useRef<HTMLElement | null>(null);
   const greetingStageRef = useRef<HTMLDivElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement | null>(null);
   const progressValueRef = useRef<HTMLSpanElement | null>(null);
@@ -586,7 +649,6 @@ export default function Home() {
   const primarySocialLinks = socialItems.slice(0, 3);
   const roleTitle =
     profileContent.headline.split("—")[0]?.trim() || "Fullstack Developer";
-
   const { scrollYProgress: overlayProgress } = useScroll({
     target: overlaySectionRef,
     offset: ["start end", "start start"],
@@ -594,6 +656,10 @@ export default function Home() {
   const isRightOverlayInView = useInView(rightOverlayRef, {
     once: false,
     amount: 0.25,
+  });
+  const isExperienceInView = useInView(experienceSectionRef, {
+    once: false,
+    amount: 0.3,
   });
 
   const springConfig = {
@@ -885,6 +951,7 @@ export default function Home() {
         socialResult,
         educationResult,
         courseworkResult,
+        experienceResult,
       ] =
         await Promise.all([
           supabase
@@ -923,6 +990,12 @@ export default function Home() {
             .select("label")
             .eq("is_active", true)
             .order("sort_order", { ascending: true }),
+          supabase
+            .from("experience")
+            .select("period, title, company, summary, highlights")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true })
+            .order("created_at", { ascending: false }),
         ]);
 
       if (!isMounted) {
@@ -953,6 +1026,10 @@ export default function Home() {
 
       if (!courseworkResult.error) {
         setCourseworkItems(buildCourseworkItems(courseworkResult.data));
+      }
+
+      if (!experienceResult.error) {
+        setExperienceItems(buildExperienceItems(experienceResult.data));
       }
     }
 
@@ -1827,6 +1904,157 @@ export default function Home() {
                       </div>
                     </motion.article>
                   ))}
+                </div>
+              </div>
+            </motion.section>
+
+            <motion.section
+              ref={experienceSectionRef}
+              variants={overlayItemVariant}
+              id="experience"
+              className="border-t border-white/8 bg-black px-4 py-12 text-white sm:px-10 sm:py-16 lg:px-12 xl:px-16"
+            >
+              <div className="space-y-10 sm:space-y-14">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="space-y-4">
+                    <p
+                      className="text-[0.72rem] uppercase tracking-[0.34em] text-white/38"
+                      style={{ fontFamily: "var(--font-bungee)" }}
+                    >
+                      06 — Experience
+                    </p>
+                    <h2
+                      className="max-w-[10ch] text-[2.8rem] leading-[0.92] tracking-[-0.08em] text-white sm:text-[4.9rem] lg:text-[6.2rem]"
+                      style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                    >
+                      Growth, practice, and hands-on building.
+                    </h2>
+                  </div>
+
+                  <p
+                    className="max-w-xl text-sm leading-7 text-white/58 sm:text-[1rem] sm:leading-8"
+                    style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                  >
+                    A timeline view of my development journey, showing how
+                    practical projects, backend work, and product thinking have
+                    shaped my experience as a fullstack developer.
+                  </p>
+                </div>
+
+                <div className="relative pl-7 sm:pl-10 lg:pl-0">
+                  <div className="absolute bottom-0 left-2 top-0 w-px bg-white/10 sm:left-4 lg:left-[13.4rem]" />
+                  <motion.div
+                    aria-hidden="true"
+                    className="absolute bottom-0 left-2 top-0 w-px origin-top bg-gradient-to-b from-[#8b7cff] via-[#6f5bf3] to-white/18 sm:left-4 lg:left-[13.4rem]"
+                    initial={{ scaleY: 0, opacity: 0.4 }}
+                    animate={
+                      isExperienceInView
+                        ? { scaleY: 1, opacity: 1 }
+                        : { scaleY: 0, opacity: 0.4 }
+                    }
+                    transition={{
+                      duration: prefersReducedMotion ? 0.35 : 1.1,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  />
+
+                  <div className="space-y-10 sm:space-y-12">
+                    {experienceItems.map((item, index) => (
+                      <motion.article
+                        key={`${item.period}-${item.title}`}
+                        variants={overlayItemVariant}
+                        transition={{ delay: 0.05 + index * 0.06 }}
+                        className="relative grid gap-4 lg:grid-cols-[12rem_1fr]"
+                      >
+                        <div className="space-y-2 lg:pr-10">
+                          <p
+                            className="text-[0.72rem] uppercase tracking-[0.24em] text-white/36"
+                            style={{ fontFamily: "var(--font-bungee)" }}
+                          >
+                            {item.period}
+                          </p>
+                          <p
+                            className="text-[0.82rem] uppercase tracking-[0.14em] text-white/24"
+                            style={{ fontFamily: "var(--font-bungee)" }}
+                          >
+                            {item.company}
+                          </p>
+                        </div>
+
+                        <motion.span
+                          aria-hidden="true"
+                          className="absolute left-[-1.6rem] top-1 h-3.5 w-3.5 rounded-full border border-white/14 bg-[#6f5bf3] shadow-[0_0_0_6px_rgba(111,91,243,0.12)] sm:left-[-2.1rem] lg:left-[12.95rem]"
+                          initial={{ scale: 0.7, opacity: 0.45 }}
+                          animate={
+                            isExperienceInView
+                              ? {
+                                  scale: [0.78, 1.08, 1],
+                                  opacity: 1,
+                                }
+                              : {
+                                  scale: 0.7,
+                                  opacity: 0.45,
+                                }
+                          }
+                          transition={{
+                            duration: prefersReducedMotion ? 0.3 : 0.7,
+                            delay: prefersReducedMotion ? 0 : 0.18 + index * 0.08,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                        />
+
+                        <motion.div
+                          initial={{ opacity: 0, x: 34 }}
+                          animate={
+                            isExperienceInView
+                              ? { opacity: 1, x: 0 }
+                              : { opacity: 0, x: 34 }
+                          }
+                          transition={{
+                            duration: prefersReducedMotion ? 0.3 : 0.72,
+                            delay: prefersReducedMotion ? 0 : 0.22 + index * 0.09,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                          className="rounded-[1.6rem] border border-white/10 bg-white/[0.03] p-5 sm:p-6"
+                        >
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <h3
+                                className="text-[1.8rem] leading-[0.96] tracking-[-0.05em] text-white sm:text-[2.35rem]"
+                                style={{
+                                  fontFamily:
+                                    '"Helvetica Neue", Arial, sans-serif',
+                                }}
+                              >
+                                {item.title}
+                              </h3>
+                              <p
+                                className="text-sm leading-7 text-white/64 sm:text-[0.98rem] sm:leading-8"
+                                style={{
+                                  fontFamily:
+                                    '"Helvetica Neue", Arial, sans-serif',
+                                }}
+                              >
+                                {item.summary}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2.5">
+                              {item.highlights.map((highlight) => (
+                                <span
+                                  key={highlight}
+                                  className="inline-flex rounded-full border border-white/10 bg-black/40 px-3 py-2 text-[0.72rem] uppercase tracking-[0.08em] text-white/76"
+                                  style={{ fontFamily: "var(--font-bungee)" }}
+                                >
+                                  {highlight}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      </motion.article>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.section>

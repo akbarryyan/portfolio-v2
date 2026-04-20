@@ -54,18 +54,20 @@ type SocialLinkRow = {
   updated_at: string;
 };
 
-type EducationRow = {
+type CourseworkRow = {
   id: string;
-  institution: string;
-  degree: string;
-  graduation_label: string | null;
+  label: string;
   is_active: boolean;
   updated_at: string;
 };
 
-type CourseworkRow = {
+type ExperienceRow = {
   id: string;
-  label: string;
+  period: string;
+  title: string;
+  company: string;
+  summary: string | null;
+  highlights: string[] | null;
   is_active: boolean;
   updated_at: string;
 };
@@ -113,6 +115,14 @@ const initialCourseworkForm = {
   label: "",
 };
 
+const initialExperienceForm = {
+  period: "",
+  title: "",
+  company: "",
+  summary: "",
+  highlightsInput: "",
+};
+
 function parseGalleryInput(input: string) {
   return input
     .split("\n")
@@ -129,6 +139,13 @@ function parseGalleryInput(input: string) {
         surfaceClass,
       };
     });
+}
+
+function parseHighlightsInput(input: string) {
+  return input
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 function Field({
@@ -334,8 +351,8 @@ export default function AdminPage() {
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [stackItems, setStackItems] = useState<StackItemRow[]>([]);
   const [socialLinks, setSocialLinks] = useState<SocialLinkRow[]>([]);
-  const [educationRows, setEducationRows] = useState<EducationRow[]>([]);
   const [courseworkRows, setCourseworkRows] = useState<CourseworkRow[]>([]);
+  const [experienceRows, setExperienceRows] = useState<ExperienceRow[]>([]);
 
   const [profileForm, setProfileForm] = useState(initialProfileForm);
   const [projectForm, setProjectForm] = useState(initialProjectForm);
@@ -343,6 +360,10 @@ export default function AdminPage() {
   const [socialForm, setSocialForm] = useState(initialSocialForm);
   const [educationForm, setEducationForm] = useState(initialEducationForm);
   const [courseworkForm, setCourseworkForm] = useState(initialCourseworkForm);
+  const [experienceForm, setExperienceForm] = useState(initialExperienceForm);
+  const [editingExperienceId, setEditingExperienceId] = useState<string | null>(
+    null,
+  );
 
   async function checkAdminAccess() {
     const { data, error } = await supabase.rpc("is_admin");
@@ -365,6 +386,7 @@ export default function AdminPage() {
       socialResult,
       educationResult,
       courseworkResult,
+      experienceResult,
     ] =
       await Promise.all([
         supabase
@@ -402,6 +424,13 @@ export default function AdminPage() {
           .select("id, label, is_active, updated_at")
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: false }),
+        supabase
+          .from("experience")
+          .select(
+            "id, period, title, company, summary, highlights, is_active, updated_at",
+          )
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: false }),
       ]);
 
     const firstError =
@@ -410,7 +439,8 @@ export default function AdminPage() {
       stackResult.error ??
       socialResult.error ??
       educationResult.error ??
-      courseworkResult.error;
+      courseworkResult.error ??
+      experienceResult.error;
 
     if (firstError) {
       setDashboardError(
@@ -424,8 +454,8 @@ export default function AdminPage() {
     setProjects(projectsResult.data ?? []);
     setStackItems(stackResult.data ?? []);
     setSocialLinks(socialResult.data ?? []);
-    setEducationRows(educationResult.data ?? []);
     setCourseworkRows(courseworkResult.data ?? []);
+    setExperienceRows(experienceResult.data ?? []);
 
     if (nextProfile) {
       setProfileForm({
@@ -504,8 +534,8 @@ export default function AdminPage() {
           setProjects([]);
           setStackItems([]);
           setSocialLinks([]);
-          setEducationRows([]);
           setCourseworkRows([]);
+          setExperienceRows([]);
         }
       })();
     });
@@ -696,13 +726,91 @@ export default function AdminPage() {
     await loadDashboard();
   }
 
+  async function addExperience() {
+    setIsSaving(true);
+    setSuccessMessage(null);
+    setDashboardError(null);
+
+    const { error } = await supabase.from("experience").insert({
+      period: experienceForm.period,
+      title: experienceForm.title,
+      company: experienceForm.company,
+      summary: experienceForm.summary || null,
+      highlights: parseHighlightsInput(experienceForm.highlightsInput),
+    });
+
+    setIsSaving(false);
+
+    if (error) {
+      setDashboardError(error.message);
+      return;
+    }
+
+    setEditingExperienceId(null);
+    setExperienceForm(initialExperienceForm);
+    setSuccessMessage("Experience berhasil ditambahkan.");
+    await loadDashboard();
+  }
+
+  async function updateExperience() {
+    if (!editingExperienceId) {
+      return;
+    }
+
+    setIsSaving(true);
+    setSuccessMessage(null);
+    setDashboardError(null);
+
+    const { error } = await supabase
+      .from("experience")
+      .update({
+        period: experienceForm.period,
+        title: experienceForm.title,
+        company: experienceForm.company,
+        summary: experienceForm.summary || null,
+        highlights: parseHighlightsInput(experienceForm.highlightsInput),
+      })
+      .eq("id", editingExperienceId);
+
+    setIsSaving(false);
+
+    if (error) {
+      setDashboardError(error.message);
+      return;
+    }
+
+    setEditingExperienceId(null);
+    setExperienceForm(initialExperienceForm);
+    setSuccessMessage("Experience berhasil diperbarui.");
+    await loadDashboard();
+  }
+
+  function startEditingExperience(item: ExperienceRow) {
+    setEditingExperienceId(item.id);
+    setExperienceForm({
+      period: item.period,
+      title: item.title,
+      company: item.company,
+      summary: item.summary ?? "",
+      highlightsInput: item.highlights?.join("\n") ?? "",
+    });
+    setSuccessMessage(null);
+    setDashboardError(null);
+  }
+
+  function cancelExperienceEdit() {
+    setEditingExperienceId(null);
+    setExperienceForm(initialExperienceForm);
+  }
+
   async function removeRow(
     table:
       | "projects"
       | "stack_items"
       | "social_links"
       | "education"
-      | "coursework",
+      | "coursework"
+      | "experience",
     id: string,
   ) {
     setIsSaving(true);
@@ -910,14 +1018,14 @@ export default function AdminPage() {
                       </h1>
                       <p className="mt-2 text-sm leading-7 text-[#7a70aa]">
                         {sessionEmail} • dashboard konten untuk profile, projects, stack,
-                        social links, education, dan coursework.
+                        social links, education, coursework, dan experience.
                       </p>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                       <StatCard label="Projects" value={String(projects.length)} />
                       <StatCard label="Stack" value={String(stackItems.length)} />
-                      <StatCard label="Education" value={String(educationRows.length)} />
+                      <StatCard label="Experience" value={String(experienceRows.length)} />
                       <StatCard label="Coursework" value={String(courseworkRows.length)} />
                     </div>
 
@@ -1378,7 +1486,166 @@ export default function AdminPage() {
                           </div>
                         </div>
                       </Panel>
+
+                      <Panel
+                        title="Experience"
+                        subtitle="Kelola timeline experience untuk section overlay, termasuk nama PT, posisi, periode, summary, dan highlights."
+                      >
+                        {editingExperienceId && (
+                          <div className="mb-4 rounded-[1.25rem] bg-[#f4f0ff] px-4 py-3 text-sm text-[#6d5ad7]">
+                            Editing selected experience. Simpan perubahan atau
+                            batalkan untuk kembali ke mode tambah.
+                          </div>
+                        )}
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Field label="Period">
+                            <Input
+                              value={experienceForm.period}
+                              onChange={(event) => {
+                                setExperienceForm((current) => ({
+                                  ...current,
+                                  period: event.target.value,
+                                }));
+                              }}
+                              placeholder="2025 — Present"
+                            />
+                          </Field>
+                          <Field label="Title">
+                            <Input
+                              value={experienceForm.title}
+                              onChange={(event) => {
+                                setExperienceForm((current) => ({
+                                  ...current,
+                                  title: event.target.value,
+                                }));
+                              }}
+                              placeholder="Fullstack Developer Intern"
+                            />
+                          </Field>
+                          <Field label="Company / PT">
+                            <Input
+                              value={experienceForm.company}
+                              onChange={(event) => {
+                                setExperienceForm((current) => ({
+                                  ...current,
+                                  company: event.target.value,
+                                }));
+                              }}
+                              placeholder="PT Nama Perusahaan"
+                            />
+                          </Field>
+                        </div>
+                        <div className="mt-4 space-y-4">
+                          <Field label="Summary">
+                            <Textarea
+                              value={experienceForm.summary}
+                              onChange={(event) => {
+                                setExperienceForm((current) => ({
+                                  ...current,
+                                  summary: event.target.value,
+                                }));
+                              }}
+                              placeholder="Deskripsi singkat pengalaman kerja atau magang."
+                            />
+                          </Field>
+                          <Field label="Highlights">
+                            <Textarea
+                              value={experienceForm.highlightsInput}
+                              onChange={(event) => {
+                                setExperienceForm((current) => ({
+                                  ...current,
+                                  highlightsInput: event.target.value,
+                                }));
+                              }}
+                              placeholder={`Next.js\nSupabase\nREST API\nUI Systems`}
+                            />
+                          </Field>
+                        </div>
+                        <div className="mt-5 flex items-center justify-between gap-4">
+                          <p className="text-sm text-[#8d83bc]">
+                            {experienceRows.length} experience tersedia.
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            {editingExperienceId && (
+                              <button
+                                type="button"
+                                onClick={cancelExperienceEdit}
+                                disabled={isSaving}
+                                className={secondaryButtonClass}
+                              >
+                                Cancel Edit
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (editingExperienceId) {
+                                  void updateExperience();
+                                  return;
+                                }
+
+                                void addExperience();
+                              }}
+                              disabled={isSaving}
+                              className={primaryButtonClass}
+                            >
+                              {editingExperienceId
+                                ? "Update Experience"
+                                : "Add Experience"}
+                            </button>
+                          </div>
+                        </div>
+                      </Panel>
                     </div>
+
+                    <Panel
+                      title="Experience List"
+                      subtitle="Daftar experience yang saat ini tampil di timeline overlay."
+                    >
+                      {experienceRows.length === 0 ? (
+                        <p className="text-sm text-[#8d83bc]">Belum ada experience.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {experienceRows.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex flex-col gap-3 rounded-[1.4rem] bg-[#f7f4ff] p-4 sm:flex-row sm:items-start sm:justify-between"
+                            >
+                              <div className="space-y-1">
+                                <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                                  {item.period}
+                                </p>
+                                <p className="text-lg text-[#2f245b]">{item.title}</p>
+                                <p className="text-sm text-[#6f63a0]">{item.company}</p>
+                                <p className="text-sm leading-7 text-[#786ea6]">
+                                  {item.summary || "Tanpa summary."}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    startEditingExperience(item);
+                                  }}
+                                  className="text-sm text-[#5b33d6]"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void removeRow("experience", item.id);
+                                  }}
+                                  className="text-sm text-[#5b33d6]"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Panel>
                   </section>
                 </>
               )}
