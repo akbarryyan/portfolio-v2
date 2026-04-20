@@ -1510,8 +1510,11 @@ export default function Home() {
               borderTopRightRadius: overlayRadius,
             }}
           >
-            <div className="grid min-h-screen lg:grid-cols-[1fr_1fr]">
+            <div className="flex min-h-screen flex-col lg:grid lg:grid-cols-[1fr_1fr]">
               <motion.div
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: false, amount: 0.2 }}
                 variants={overlayColumnVariant}
                 className="flex min-h-screen bg-black px-6 py-10 sm:px-10 sm:py-14 lg:px-12 xl:px-16"
               >
@@ -1664,6 +1667,9 @@ export default function Home() {
             </div>
 
             <motion.section
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: false, amount: 0.18 }}
               variants={overlayItemVariant}
               className="bg-black px-4 py-10 text-white sm:px-10 sm:py-12 lg:px-12 xl:px-16"
             >
@@ -1720,6 +1726,9 @@ export default function Home() {
             </motion.section>
 
             <motion.section
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: false, amount: 0.18 }}
               variants={overlayItemVariant}
               id="projects"
               className="border-t border-white/8 bg-[#050505] px-4 py-12 text-white sm:px-10 sm:py-16 lg:px-12 xl:px-16"
@@ -1910,6 +1919,9 @@ export default function Home() {
 
             <motion.section
               ref={experienceSectionRef}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: false, amount: 0.18 }}
               variants={overlayItemVariant}
               id="experience"
               className="border-t border-white/8 bg-black px-4 py-12 text-white sm:px-10 sm:py-16 lg:px-12 xl:px-16"
