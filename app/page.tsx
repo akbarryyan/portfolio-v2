@@ -288,12 +288,34 @@ const fallbackExperienceItems = [
   },
 ];
 
+const fallbackCertificateItems = [
+  {
+    title: "Fullstack Web Development",
+    issuer: "Professional Training",
+    year: "2025",
+    imageSrc: "/certificates/certificate-01.svg",
+  },
+  {
+    title: "Backend API Engineering",
+    issuer: "Technical Program",
+    year: "2025",
+    imageSrc: "/certificates/certificate-02.svg",
+  },
+  {
+    title: "UI/UX & Product Thinking",
+    issuer: "Creative Workshop",
+    year: "2024",
+    imageSrc: "/certificates/certificate-03.svg",
+  },
+];
+
 type StackSection = (typeof fallbackStackSections)[number];
 type ProjectItem = (typeof fallbackProjectItems)[number];
 type SocialItem = (typeof fallbackSocialItems)[number];
 type ProfileContent = typeof fallbackProfile;
 type EducationContent = typeof fallbackEducation;
 type ExperienceItem = (typeof fallbackExperienceItems)[number];
+type CertificateItem = (typeof fallbackCertificateItems)[number];
 
 type ProfileRow = {
   display_name: string;
@@ -331,6 +353,13 @@ type ExperienceRow = {
   company: string;
   summary: string | null;
   highlights: string[] | null;
+};
+
+type CertificateRow = {
+  title: string;
+  issuer: string;
+  year: string;
+  image_url: string;
 };
 
 type ProjectRow = {
@@ -527,8 +556,28 @@ function buildExperienceItems(
   });
 }
 
+function buildCertificateItems(
+  rows: CertificateRow[] | null | undefined,
+): CertificateItem[] {
+  if (!rows || rows.length === 0) {
+    return fallbackCertificateItems;
+  }
+
+  return rows.map((row, index) => {
+    const fallbackItem =
+      fallbackCertificateItems[index % fallbackCertificateItems.length];
+
+    return {
+      title: row.title || fallbackItem.title,
+      issuer: row.issuer || fallbackItem.issuer,
+      year: row.year || fallbackItem.year,
+      imageSrc: row.image_url || fallbackItem.imageSrc,
+    };
+  });
+}
+
 const GREETING_INTERVAL_MS = 2200;
-const LAST_GREETING_HOLD_MS = 900;
+const LAST_GREETING_HOLD_MS = 500;
 
 const heroContainer = {
   hidden: {},
@@ -623,6 +672,8 @@ export default function Home() {
     useState<string[]>(fallbackCoursework);
   const [experienceItems, setExperienceItems] =
     useState<ExperienceItem[]>(fallbackExperienceItems);
+  const [certificateItems, setCertificateItems] =
+    useState<CertificateItem[]>(fallbackCertificateItems);
   const [overlayVisitCount, setOverlayVisitCount] = useState(0);
   const [projectSlideIndexes, setProjectSlideIndexes] = useState(() =>
     fallbackProjectItems.map(() => 0),
@@ -952,6 +1003,7 @@ export default function Home() {
         educationResult,
         courseworkResult,
         experienceResult,
+        certificateResult,
       ] =
         await Promise.all([
           supabase
@@ -996,6 +1048,12 @@ export default function Home() {
             .eq("is_active", true)
             .order("sort_order", { ascending: true })
             .order("created_at", { ascending: false }),
+          supabase
+            .from("certificates")
+            .select("title, issuer, year, image_url")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true })
+            .order("created_at", { ascending: false }),
         ]);
 
       if (!isMounted) {
@@ -1030,6 +1088,10 @@ export default function Home() {
 
       if (!experienceResult.error) {
         setExperienceItems(buildExperienceItems(experienceResult.data));
+      }
+
+      if (!certificateResult.error) {
+        setCertificateItems(buildCertificateItems(certificateResult.data));
       }
     }
 
@@ -1092,7 +1154,7 @@ export default function Home() {
 
     const introStartedAt = window.performance.now();
     const totalIntroDuration =
-      (greetings.length - 1) * GREETING_INTERVAL_MS + LAST_GREETING_HOLD_MS;
+      greetings.length * GREETING_INTERVAL_MS + LAST_GREETING_HOLD_MS;
 
     const greetingTimer = window.setInterval(() => {
       setGreetingIndex((current) => {
@@ -2067,6 +2129,84 @@ export default function Home() {
                       </motion.article>
                     ))}
                   </div>
+                </div>
+              </div>
+            </motion.section>
+
+            <motion.section
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: false, amount: 0.18 }}
+              variants={overlayItemVariant}
+              id="certificate"
+              className="border-t border-white/8 bg-[#050505] px-4 py-12 text-white sm:px-10 sm:py-16 lg:px-12 xl:px-16"
+            >
+              <div className="space-y-10 sm:space-y-14">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="space-y-4">
+                    <p
+                      className="text-[0.72rem] uppercase tracking-[0.34em] text-white/38"
+                      style={{ fontFamily: "var(--font-bungee)" }}
+                    >
+                      07 — Certificate
+                    </p>
+                    <h2
+                      className="max-w-[10ch] text-[2.8rem] leading-[0.92] tracking-[-0.08em] text-white sm:text-[4.9rem] lg:text-[6.2rem]"
+                      style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                    >
+                      Visual proof of learning and continuous growth.
+                    </h2>
+                  </div>
+
+                  <p
+                    className="max-w-xl text-sm leading-7 text-white/58 sm:text-[1rem] sm:leading-8"
+                    style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                  >
+                    A quick gallery of certificates that reflect my learning
+                    path in web development, backend systems, and product
+                    thinking.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  {certificateItems.map((item, index) => (
+                    <motion.article
+                      key={`${item.title}-${item.year}`}
+                      variants={overlayItemVariant}
+                      transition={{ delay: 0.05 + index * 0.07 }}
+                      className="group overflow-hidden rounded-[1.7rem] border border-white/10 bg-white/[0.03]"
+                    >
+                      <div className="relative aspect-[1.25/1] overflow-hidden border-b border-white/8 bg-[#111114]">
+                        <img
+                          src={item.imageSrc}
+                          alt={item.title}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      </div>
+                      <div className="space-y-3 p-5 sm:p-6">
+                        <div className="flex items-center justify-between gap-4">
+                          <p
+                            className="text-[0.68rem] uppercase tracking-[0.18em] text-white/42"
+                            style={{ fontFamily: "var(--font-bungee)" }}
+                          >
+                            {item.issuer}
+                          </p>
+                          <span
+                            className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[0.66rem] uppercase tracking-[0.14em] text-white/58"
+                            style={{ fontFamily: "var(--font-bungee)" }}
+                          >
+                            {item.year}
+                          </span>
+                        </div>
+                        <h3
+                          className="text-[1.45rem] leading-[0.98] tracking-[-0.05em] text-white sm:text-[1.8rem]"
+                          style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                        >
+                          {item.title}
+                        </h3>
+                      </div>
+                    </motion.article>
+                  ))}
                 </div>
               </div>
             </motion.section>

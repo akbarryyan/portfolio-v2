@@ -1,0 +1,21 @@
+<svg width="1200" height="960" viewBox="0 0 1200 960" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="960" rx="40" fill="#F5F2FF"/>
+  <rect x="32" y="32" width="1136" height="896" rx="28" fill="#FFFFFF" stroke="#E4DBFF" stroke-width="8"/>
+  <rect x="88" y="88" width="1024" height="84" rx="20" fill="#F1ECFF"/>
+  <text x="120" y="140" fill="#6F5BF3" font-family="Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="4">CERTIFICATE OF COMPLETION</text>
+  <text x="120" y="248" fill="#241A4A" font-family="Arial, sans-serif" font-size="78" font-weight="700">Fullstack Web</text>
+  <text x="120" y="336" fill="#241A4A" font-family="Arial, sans-serif" font-size="78" font-weight="700">Development</text>
+  <text x="120" y="430" fill="#7A70AA" font-family="Arial, sans-serif" font-size="28">Awarded for successful completion of an intensive</text>
+  <text x="120" y="474" fill="#7A70AA" font-family="Arial, sans-serif" font-size="28">program covering frontend, backend, and deployment workflows.</text>
+  <rect x="120" y="574" width="420" height="120" rx="24" fill="#F6F3FF" stroke="#E6DEFF"/>
+  <text x="152" y="626" fill="#6F5BF3" font-family="Arial, sans-serif" font-size="24" font-weight="700">Recipient</text>
+  <text x="152" y="670" fill="#241A4A" font-family="Arial, sans-serif" font-size="38" font-weight="700">Akbar Rayyan</text>
+  <rect x="580" y="574" width="220" height="120" rx="24" fill="#F6F3FF" stroke="#E6DEFF"/>
+  <text x="612" y="626" fill="#6F5BF3" font-family="Arial, sans-serif" font-size="24" font-weight="700">Year</text>
+  <text x="612" y="670" fill="#241A4A" font-family="Arial, sans-serif" font-size="38" font-weight="700">2025</text>
+  <circle cx="982" cy="632" r="96" fill="#6F5BF3"/>
+  <circle cx="982" cy="632" r="66" fill="#FFFFFF" fill-opacity="0.18"/>
+  <path d="M950 632L972 654L1018 608" stroke="#F8F6FF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="120" y="792" width="340" height="14" rx="7" fill="#DDD5FF"/>
+  <rect x="120" y="832" width="240" height="14" rx="7" fill="#EAE4FF"/>
+</svg>

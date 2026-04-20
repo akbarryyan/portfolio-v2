@@ -113,6 +113,18 @@ create table if not exists public.experience (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.certificates (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  issuer text not null,
+  year text not null,
+  image_url text not null,
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.stack_items (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -154,6 +166,9 @@ create index if not exists coursework_sort_idx
 create index if not exists experience_sort_idx
   on public.experience (sort_order);
 
+create index if not exists certificates_sort_idx
+  on public.certificates (sort_order);
+
 create index if not exists admin_users_email_idx
   on public.admin_users (lower(email));
 
@@ -192,6 +207,11 @@ create trigger experience_set_updated_at
 before update on public.experience
 for each row execute procedure public.set_updated_at();
 
+drop trigger if exists certificates_set_updated_at on public.certificates;
+create trigger certificates_set_updated_at
+before update on public.certificates
+for each row execute procedure public.set_updated_at();
+
 drop trigger if exists admin_users_set_updated_at on public.admin_users;
 create trigger admin_users_set_updated_at
 before update on public.admin_users
@@ -205,6 +225,7 @@ alter table public.social_links enable row level security;
 alter table public.education enable row level security;
 alter table public.coursework enable row level security;
 alter table public.experience enable row level security;
+alter table public.certificates enable row level security;
 
 drop policy if exists "authenticated can read own admin row" on public.admin_users;
 create policy "authenticated can read own admin row"
@@ -324,6 +345,21 @@ using (is_active = true);
 drop policy if exists "admins can manage experience" on public.experience;
 create policy "admins can manage experience"
 on public.experience
+for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "public can read active certificates" on public.certificates;
+create policy "public can read active certificates"
+on public.certificates
+for select
+to anon, authenticated
+using (is_active = true);
+
+drop policy if exists "admins can manage certificates" on public.certificates;
+create policy "admins can manage certificates"
+on public.certificates
 for all
 to authenticated
 using (public.is_admin())

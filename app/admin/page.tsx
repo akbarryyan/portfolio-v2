@@ -72,6 +72,16 @@ type ExperienceRow = {
   updated_at: string;
 };
 
+type CertificateRow = {
+  id: string;
+  title: string;
+  issuer: string;
+  year: string;
+  image_url: string;
+  is_active: boolean;
+  updated_at: string;
+};
+
 const supabase = createBrowserSupabaseClient();
 
 const initialProfileForm = {
@@ -121,6 +131,13 @@ const initialExperienceForm = {
   company: "",
   summary: "",
   highlightsInput: "",
+};
+
+const initialCertificateForm = {
+  title: "",
+  issuer: "",
+  year: "",
+  image_url: "",
 };
 
 function parseGalleryInput(input: string) {
@@ -353,6 +370,7 @@ export default function AdminPage() {
   const [socialLinks, setSocialLinks] = useState<SocialLinkRow[]>([]);
   const [courseworkRows, setCourseworkRows] = useState<CourseworkRow[]>([]);
   const [experienceRows, setExperienceRows] = useState<ExperienceRow[]>([]);
+  const [certificateRows, setCertificateRows] = useState<CertificateRow[]>([]);
 
   const [profileForm, setProfileForm] = useState(initialProfileForm);
   const [projectForm, setProjectForm] = useState(initialProjectForm);
@@ -361,7 +379,11 @@ export default function AdminPage() {
   const [educationForm, setEducationForm] = useState(initialEducationForm);
   const [courseworkForm, setCourseworkForm] = useState(initialCourseworkForm);
   const [experienceForm, setExperienceForm] = useState(initialExperienceForm);
+  const [certificateForm, setCertificateForm] = useState(initialCertificateForm);
   const [editingExperienceId, setEditingExperienceId] = useState<string | null>(
+    null,
+  );
+  const [editingCertificateId, setEditingCertificateId] = useState<string | null>(
     null,
   );
 
@@ -387,6 +409,7 @@ export default function AdminPage() {
       educationResult,
       courseworkResult,
       experienceResult,
+      certificateResult,
     ] =
       await Promise.all([
         supabase
@@ -431,6 +454,11 @@ export default function AdminPage() {
           )
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: false }),
+        supabase
+          .from("certificates")
+          .select("id, title, issuer, year, image_url, is_active, updated_at")
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: false }),
       ]);
 
     const firstError =
@@ -440,7 +468,8 @@ export default function AdminPage() {
       socialResult.error ??
       educationResult.error ??
       courseworkResult.error ??
-      experienceResult.error;
+      experienceResult.error ??
+      certificateResult.error;
 
     if (firstError) {
       setDashboardError(
@@ -456,6 +485,7 @@ export default function AdminPage() {
     setSocialLinks(socialResult.data ?? []);
     setCourseworkRows(courseworkResult.data ?? []);
     setExperienceRows(experienceResult.data ?? []);
+    setCertificateRows(certificateResult.data ?? []);
 
     if (nextProfile) {
       setProfileForm({
@@ -536,6 +566,7 @@ export default function AdminPage() {
           setSocialLinks([]);
           setCourseworkRows([]);
           setExperienceRows([]);
+          setCertificateRows([]);
         }
       })();
     });
@@ -803,6 +834,80 @@ export default function AdminPage() {
     setExperienceForm(initialExperienceForm);
   }
 
+  async function addCertificate() {
+    setIsSaving(true);
+    setSuccessMessage(null);
+    setDashboardError(null);
+
+    const { error } = await supabase.from("certificates").insert({
+      title: certificateForm.title,
+      issuer: certificateForm.issuer,
+      year: certificateForm.year,
+      image_url: certificateForm.image_url,
+    });
+
+    setIsSaving(false);
+
+    if (error) {
+      setDashboardError(error.message);
+      return;
+    }
+
+    setEditingCertificateId(null);
+    setCertificateForm(initialCertificateForm);
+    setSuccessMessage("Certificate berhasil ditambahkan.");
+    await loadDashboard();
+  }
+
+  async function updateCertificate() {
+    if (!editingCertificateId) {
+      return;
+    }
+
+    setIsSaving(true);
+    setSuccessMessage(null);
+    setDashboardError(null);
+
+    const { error } = await supabase
+      .from("certificates")
+      .update({
+        title: certificateForm.title,
+        issuer: certificateForm.issuer,
+        year: certificateForm.year,
+        image_url: certificateForm.image_url,
+      })
+      .eq("id", editingCertificateId);
+
+    setIsSaving(false);
+
+    if (error) {
+      setDashboardError(error.message);
+      return;
+    }
+
+    setEditingCertificateId(null);
+    setCertificateForm(initialCertificateForm);
+    setSuccessMessage("Certificate berhasil diperbarui.");
+    await loadDashboard();
+  }
+
+  function startEditingCertificate(item: CertificateRow) {
+    setEditingCertificateId(item.id);
+    setCertificateForm({
+      title: item.title,
+      issuer: item.issuer,
+      year: item.year,
+      image_url: item.image_url,
+    });
+    setSuccessMessage(null);
+    setDashboardError(null);
+  }
+
+  function cancelCertificateEdit() {
+    setEditingCertificateId(null);
+    setCertificateForm(initialCertificateForm);
+  }
+
   async function removeRow(
     table:
       | "projects"
@@ -810,7 +915,8 @@ export default function AdminPage() {
       | "social_links"
       | "education"
       | "coursework"
-      | "experience",
+      | "experience"
+      | "certificates",
     id: string,
   ) {
     setIsSaving(true);
@@ -1018,7 +1124,7 @@ export default function AdminPage() {
                       </h1>
                       <p className="mt-2 text-sm leading-7 text-[#7a70aa]">
                         {sessionEmail} • dashboard konten untuk profile, projects, stack,
-                        social links, education, coursework, dan experience.
+                        social links, education, coursework, experience, dan certificates.
                       </p>
                     </div>
 
@@ -1026,7 +1132,7 @@ export default function AdminPage() {
                       <StatCard label="Projects" value={String(projects.length)} />
                       <StatCard label="Stack" value={String(stackItems.length)} />
                       <StatCard label="Experience" value={String(experienceRows.length)} />
-                      <StatCard label="Coursework" value={String(courseworkRows.length)} />
+                      <StatCard label="Certificates" value={String(certificateRows.length)} />
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.6rem] bg-[#f7f4ff] px-5 py-4">
@@ -1596,6 +1702,102 @@ export default function AdminPage() {
                           </div>
                         </div>
                       </Panel>
+
+                      <Panel
+                        title="Certificates"
+                        subtitle="Kelola gallery certificate untuk section overlay, termasuk judul, issuer, tahun, dan URL gambar."
+                      >
+                        {editingCertificateId && (
+                          <div className="mb-4 rounded-[1.25rem] bg-[#f4f0ff] px-4 py-3 text-sm text-[#6d5ad7]">
+                            Editing selected certificate. Simpan perubahan atau
+                            batalkan untuk kembali ke mode tambah.
+                          </div>
+                        )}
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Field label="Title">
+                            <Input
+                              value={certificateForm.title}
+                              onChange={(event) => {
+                                setCertificateForm((current) => ({
+                                  ...current,
+                                  title: event.target.value,
+                                }));
+                              }}
+                              placeholder="Fullstack Web Development"
+                            />
+                          </Field>
+                          <Field label="Issuer">
+                            <Input
+                              value={certificateForm.issuer}
+                              onChange={(event) => {
+                                setCertificateForm((current) => ({
+                                  ...current,
+                                  issuer: event.target.value,
+                                }));
+                              }}
+                              placeholder="Professional Training"
+                            />
+                          </Field>
+                          <Field label="Year">
+                            <Input
+                              value={certificateForm.year}
+                              onChange={(event) => {
+                                setCertificateForm((current) => ({
+                                  ...current,
+                                  year: event.target.value,
+                                }));
+                              }}
+                              placeholder="2025"
+                            />
+                          </Field>
+                          <Field label="Image URL">
+                            <Input
+                              value={certificateForm.image_url}
+                              onChange={(event) => {
+                                setCertificateForm((current) => ({
+                                  ...current,
+                                  image_url: event.target.value,
+                                }));
+                              }}
+                              placeholder="https://... atau /certificates/file.svg"
+                            />
+                          </Field>
+                        </div>
+                        <div className="mt-5 flex items-center justify-between gap-4">
+                          <p className="text-sm text-[#8d83bc]">
+                            {certificateRows.length} certificate tersedia.
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            {editingCertificateId && (
+                              <button
+                                type="button"
+                                onClick={cancelCertificateEdit}
+                                disabled={isSaving}
+                                className={secondaryButtonClass}
+                              >
+                                Cancel Edit
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (editingCertificateId) {
+                                  void updateCertificate();
+                                  return;
+                                }
+
+                                void addCertificate();
+                              }}
+                              disabled={isSaving}
+                              className={primaryButtonClass}
+                            >
+                              {editingCertificateId
+                                ? "Update Certificate"
+                                : "Add Certificate"}
+                            </button>
+                          </div>
+                        </div>
+                      </Panel>
                     </div>
 
                     <Panel
@@ -1635,6 +1837,55 @@ export default function AdminPage() {
                                   type="button"
                                   onClick={() => {
                                     void removeRow("experience", item.id);
+                                  }}
+                                  className="text-sm text-[#5b33d6]"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Panel>
+
+                    <Panel
+                      title="Certificate List"
+                      subtitle="Daftar certificate yang saat ini tampil di gallery overlay."
+                    >
+                      {certificateRows.length === 0 ? (
+                        <p className="text-sm text-[#8d83bc]">Belum ada certificate.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {certificateRows.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex flex-col gap-3 rounded-[1.4rem] bg-[#f7f4ff] p-4 sm:flex-row sm:items-start sm:justify-between"
+                            >
+                              <div className="space-y-1">
+                                <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                                  {item.year}
+                                </p>
+                                <p className="text-lg text-[#2f245b]">{item.title}</p>
+                                <p className="text-sm text-[#6f63a0]">{item.issuer}</p>
+                                <p className="text-sm leading-7 text-[#786ea6]">
+                                  {item.image_url}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    startEditingCertificate(item);
+                                  }}
+                                  className="text-sm text-[#5b33d6]"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void removeRow("certificates", item.id);
                                   }}
                                   className="text-sm text-[#5b33d6]"
                                 >
