@@ -495,92 +495,6 @@ const heroItem = {
   },
 };
 
-const overlayColumn = {
-  hidden: {
-    opacity: 0,
-    y: 54,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.9,
-      ease: [0.16, 1, 0.3, 1] as const,
-      staggerChildren: 0.12,
-      delayChildren: 0.08,
-    },
-  },
-};
-
-const overlayItem = {
-  hidden: {
-    opacity: 0,
-    y: 26,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.72,
-      ease: [0.16, 1, 0.3, 1] as const,
-    },
-  },
-};
-
-const overlayTextGroup = {
-  hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.22,
-    },
-  },
-};
-
-const overlayTextWord = {
-  hidden: {
-    opacity: 1,
-    color: "rgba(255,255,255,0.12)",
-  },
-  show: {
-    opacity: 1,
-    color: "rgba(255,255,255,0.98)",
-    transition: {
-      duration: 0.8,
-      ease: [0.16, 1, 0.3, 1] as const,
-    },
-  },
-};
-
-const overlayMaskBox = {
-  hidden: {
-    clipPath: "inset(0 100% 0 0 round 0px)",
-  },
-  show: {
-    clipPath: "inset(0 0% 0 0 round 0px)",
-    transition: {
-      duration: 0.95,
-      ease: [0.16, 1, 0.3, 1] as const,
-    },
-  },
-};
-
-const overlayMaskText = {
-  hidden: {
-    opacity: 0,
-    x: -34,
-  },
-  show: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.72,
-      delay: 0.14,
-      ease: [0.16, 1, 0.3, 1] as const,
-    },
-  },
-};
-
 const backgroundBands = [
   {
     className: "left-[-10%] top-[-6%] h-40 w-[70vw] rotate-[18deg]",
@@ -647,6 +561,7 @@ export default function Home() {
     useState<EducationContent>(fallbackEducation);
   const [courseworkItems, setCourseworkItems] =
     useState<string[]>(fallbackCoursework);
+  const [overlayVisitCount, setOverlayVisitCount] = useState(0);
   const [projectSlideIndexes, setProjectSlideIndexes] = useState(() =>
     fallbackProjectItems.map(() => 0),
   );
@@ -677,7 +592,7 @@ export default function Home() {
     offset: ["start end", "start start"],
   });
   const isRightOverlayInView = useInView(rightOverlayRef, {
-    once: true,
+    once: false,
     amount: 0.25,
   });
 
@@ -718,6 +633,111 @@ export default function Home() {
   const heroDimOpacity = useSpring(
     useTransform(overlayProgress, [0, 0.45, 1], [0, 0.38, 0.62]),
     springConfig,
+  );
+  const isOverlayReplay = overlayVisitCount > 1;
+
+  const overlayColumnVariant = useMemo(
+    () => ({
+      hidden: {
+        opacity: 0,
+        y: isOverlayReplay ? 32 : 54,
+      },
+      show: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: isOverlayReplay ? 0.68 : 0.9,
+          ease: [0.16, 1, 0.3, 1] as const,
+          staggerChildren: isOverlayReplay ? 0.08 : 0.12,
+          delayChildren: isOverlayReplay ? 0.04 : 0.08,
+        },
+      },
+    }),
+    [isOverlayReplay],
+  );
+
+  const overlayItemVariant = useMemo(
+    () => ({
+      hidden: {
+        opacity: 0,
+        y: isOverlayReplay ? 18 : 26,
+      },
+      show: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: isOverlayReplay ? 0.56 : 0.72,
+          ease: [0.16, 1, 0.3, 1] as const,
+        },
+      },
+    }),
+    [isOverlayReplay],
+  );
+
+  const overlayTextGroupVariant = useMemo(
+    () => ({
+      hidden: {},
+      show: {
+        transition: {
+          staggerChildren: isOverlayReplay ? 0.04 : 0.06,
+          delayChildren: isOverlayReplay ? 0.12 : 0.22,
+        },
+      },
+    }),
+    [isOverlayReplay],
+  );
+
+  const overlayTextWordVariant = useMemo(
+    () => ({
+      hidden: {
+        opacity: 1,
+        color: "rgba(255,255,255,0.12)",
+      },
+      show: {
+        opacity: 1,
+        color: "rgba(255,255,255,0.98)",
+        transition: {
+          duration: isOverlayReplay ? 0.58 : 0.8,
+          ease: [0.16, 1, 0.3, 1] as const,
+        },
+      },
+    }),
+    [isOverlayReplay],
+  );
+
+  const overlayMaskBoxVariant = useMemo(
+    () => ({
+      hidden: {
+        clipPath: "inset(0 100% 0 0 round 0px)",
+      },
+      show: {
+        clipPath: "inset(0 0% 0 0 round 0px)",
+        transition: {
+          duration: isOverlayReplay ? 0.72 : 0.95,
+          ease: [0.16, 1, 0.3, 1] as const,
+        },
+      },
+    }),
+    [isOverlayReplay],
+  );
+
+  const overlayMaskTextVariant = useMemo(
+    () => ({
+      hidden: {
+        opacity: 0,
+        x: isOverlayReplay ? -18 : -34,
+      },
+      show: {
+        opacity: 1,
+        x: 0,
+        transition: {
+          duration: isOverlayReplay ? 0.5 : 0.72,
+          delay: isOverlayReplay ? 0.08 : 0.14,
+          ease: [0.16, 1, 0.3, 1] as const,
+        },
+      },
+    }),
+    [isOverlayReplay],
   );
 
   useEffect(() => {
@@ -1395,7 +1415,10 @@ export default function Home() {
           ref={overlaySectionRef}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, amount: 0.15 }}
+          viewport={{ once: false, amount: 0.15 }}
+          onViewportEnter={() => {
+            setOverlayVisitCount((current) => current + 1);
+          }}
           variants={heroContainer}
           id="about"
           className="portfolio-overlay-section relative min-h-screen px-0"
@@ -1412,41 +1435,44 @@ export default function Home() {
           >
             <div className="grid min-h-screen lg:grid-cols-[1fr_1fr]">
               <motion.div
-                variants={overlayColumn}
+                variants={overlayColumnVariant}
                 className="flex min-h-screen bg-black px-6 py-10 sm:px-10 sm:py-14 lg:px-12 xl:px-16"
               >
                 <motion.div
-                  variants={overlayColumn}
+                  variants={overlayColumnVariant}
                   className="flex h-full w-full flex-col justify-start sm:justify-center"
                   style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
                 >
                   <motion.p
-                    variants={overlayItem}
+                    variants={overlayItemVariant}
                     className="hidden text-[0.78rem] uppercase tracking-[0.48em] text-[#6f6148] sm:block"
                   >
                     About
                   </motion.p>
                   <motion.h2
-                    variants={overlayItem}
+                    variants={overlayItemVariant}
                     className="mt-2 max-w-[10ch] text-[2.95rem] leading-[1.02] font-semibold tracking-[-0.06em] text-white sm:mt-12 sm:max-w-[14ch] sm:text-[4.3rem] lg:text-[4.8rem]"
                   >
                     Building things for the web and backend systems.
                   </motion.h2>
                   <motion.div
-                    variants={overlayItem}
+                    variants={overlayItemVariant}
                     className="mt-9 h-px w-14 bg-white/18 sm:mt-10"
                   />
                   <motion.p
                     initial="hidden"
                     whileInView="show"
-                    viewport={{ once: true, amount: 0.45 }}
+                    viewport={{ once: false, amount: 0.45 }}
                     className="mt-12 max-w-none text-[1.02rem] leading-[1.72] text-white/92 sm:mt-14 sm:max-w-[22ch] sm:text-[1.55rem] sm:leading-[1.52] lg:text-[1.85rem]"
                   >
-                    <motion.span variants={overlayTextGroup} className="block">
+                    <motion.span
+                      variants={overlayTextGroupVariant}
+                      className="block"
+                    >
                       {aboutWords.map((word, index) => (
                         <motion.span
                           key={`${word}-${index}`}
-                          variants={overlayTextWord}
+                          variants={overlayTextWordVariant}
                           className="inline-block pr-[0.24em] align-top sm:pr-[0.28em]"
                         >
                           {word}
@@ -1461,8 +1487,8 @@ export default function Home() {
                 ref={rightOverlayRef}
                 initial="hidden"
                 whileInView="show"
-                viewport={{ once: true, amount: 0.25 }}
-                variants={overlayColumn}
+                viewport={{ once: false, amount: 0.25 }}
+                variants={overlayColumnVariant}
                 className="portfolio-blue-panel relative min-h-screen overflow-hidden px-4 py-10 text-black sm:px-10 sm:py-14 lg:px-12 xl:px-16"
               >
                 <motion.div
@@ -1492,20 +1518,20 @@ export default function Home() {
                   }
                 />
                 <motion.div
-                  variants={overlayColumn}
+                  variants={overlayColumnVariant}
                   className="relative flex h-full flex-col justify-start gap-10 sm:gap-18"
                   style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
                 >
-                  <motion.div variants={overlayItem} className="space-y-5">
+                  <motion.div variants={overlayItemVariant} className="space-y-5">
                     <p className="text-[0.78rem] uppercase tracking-[0.46em] text-white/80">
                       01 — I Am
                     </p>
                     <motion.div
-                      variants={overlayMaskBox}
+                      variants={overlayMaskBoxVariant}
                       className="inline-block overflow-hidden bg-black px-4 py-2 sm:px-5 sm:py-3"
                     >
                       <motion.h3
-                        variants={overlayMaskText}
+                        variants={overlayMaskTextVariant}
                         className="text-[2rem] leading-[0.94] font-black tracking-[-0.06em] text-[#6f5bf3] sm:text-[4.3rem] lg:text-[5.3rem]"
                       >
                         Fullstack &amp;
@@ -1515,16 +1541,16 @@ export default function Home() {
                     </motion.div>
                   </motion.div>
 
-                  <motion.div variants={overlayItem} className="space-y-5">
+                  <motion.div variants={overlayItemVariant} className="space-y-5">
                     <p className="text-[0.78rem] uppercase tracking-[0.46em] text-white/80">
                       02 — Education
                     </p>
                     <motion.div
-                      variants={overlayMaskBox}
+                      variants={overlayMaskBoxVariant}
                       className="inline-block overflow-hidden bg-black px-4 py-2 sm:px-5 sm:py-3"
                     >
                       <motion.h3
-                        variants={overlayMaskText}
+                        variants={overlayMaskTextVariant}
                         className="text-[1.5rem] leading-[0.98] font-black tracking-[-0.05em] text-[#6f5bf3] sm:text-[3.35rem] lg:text-[4rem]"
                       >
                         {educationContent.institution}
@@ -1540,7 +1566,7 @@ export default function Home() {
                     </div>
                   </motion.div>
 
-                  <motion.div variants={overlayItem} className="space-y-6">
+                  <motion.div variants={overlayItemVariant} className="space-y-6">
                     <p className="text-[0.78rem] uppercase tracking-[0.46em] text-white/80">
                       03 — Relevant Coursework
                     </p>
@@ -1561,7 +1587,7 @@ export default function Home() {
             </div>
 
             <motion.section
-              variants={overlayItem}
+              variants={overlayItemVariant}
               className="bg-black px-4 py-10 text-white sm:px-10 sm:py-12 lg:px-12 xl:px-16"
             >
               <div className="space-y-10 sm:space-y-14">
@@ -1617,7 +1643,7 @@ export default function Home() {
             </motion.section>
 
             <motion.section
-              variants={overlayItem}
+              variants={overlayItemVariant}
               id="projects"
               className="border-t border-white/8 bg-[#050505] px-4 py-12 text-white sm:px-10 sm:py-16 lg:px-12 xl:px-16"
             >
@@ -1652,7 +1678,7 @@ export default function Home() {
                   {projectItems.map((project, index) => (
                     <motion.article
                       key={project.title}
-                      variants={overlayItem}
+                      variants={overlayItemVariant}
                       transition={{ delay: 0.08 + index * 0.08 }}
                       className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 sm:p-6"
                     >
