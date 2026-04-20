@@ -146,6 +146,11 @@ const initialCertificateForm = {
   image_url: "",
 };
 
+type ToastState = {
+  type: "success" | "error" | "info";
+  message: string;
+} | null;
+
 function parseGalleryInput(input: string) {
   return input
     .split("\n")
@@ -369,6 +374,7 @@ export default function AdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState>(null);
 
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [projects, setProjects] = useState<ProjectRow[]>([]);
@@ -392,12 +398,32 @@ export default function AdminPage() {
   const [editingCertificateId, setEditingCertificateId] = useState<string | null>(
     null,
   );
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setToast(null);
+    }, 2800);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [toast]);
+
+  function showToast(type: NonNullable<ToastState>["type"], message: string) {
+    setToast({ type, message });
+  }
 
   async function checkAdminAccess() {
     const { data, error } = await supabase.rpc("is_admin");
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return false;
     }
 
@@ -598,6 +624,7 @@ export default function AdminPage() {
 
     setIsSaving(false);
     setAuthMessage(error ? error.message : "Sign in berhasil.");
+    showToast(error ? "error" : "success", error ? error.message : "Sign in berhasil.");
   }
 
   async function handleSignUp() {
@@ -615,12 +642,19 @@ export default function AdminPage() {
         ? error.message
         : "Akun berhasil dibuat. Cek email kalau verifikasi diaktifkan.",
     );
+    showToast(
+      error ? "error" : "success",
+      error
+        ? error.message
+        : "Akun berhasil dibuat. Cek email kalau verifikasi diaktifkan.",
+    );
   }
 
   async function handleSignOut() {
     await supabase.auth.signOut();
     setSuccessMessage(null);
     setAuthMessage("Session ditutup.");
+    showToast("info", "Session ditutup.");
   }
 
   async function saveProfile() {
@@ -641,10 +675,12 @@ export default function AdminPage() {
 
     if (result.error) {
       setDashboardError(result.error.message);
+      showToast("error", result.error.message);
       return;
     }
 
     setSuccessMessage("Profile berhasil disimpan.");
+    showToast("success", "Profile berhasil disimpan.");
     await loadDashboard();
   }
 
@@ -668,11 +704,13 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setProjectForm(initialProjectForm);
     setSuccessMessage("Project baru berhasil ditambahkan.");
+    showToast("success", "Project baru berhasil ditambahkan.");
     await loadDashboard();
   }
 
@@ -691,11 +729,13 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setStackForm(initialStackForm);
     setSuccessMessage("Stack item berhasil ditambahkan.");
+    showToast("success", "Stack item berhasil ditambahkan.");
     await loadDashboard();
   }
 
@@ -714,11 +754,13 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setSocialForm(initialSocialForm);
     setSuccessMessage("Social link berhasil ditambahkan.");
+    showToast("success", "Social link berhasil ditambahkan.");
     await loadDashboard();
   }
 
@@ -737,11 +779,13 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setEducationForm(initialEducationForm);
     setSuccessMessage("Education berhasil ditambahkan.");
+    showToast("success", "Education berhasil ditambahkan.");
     await loadDashboard();
   }
 
@@ -758,11 +802,13 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setCourseworkForm(initialCourseworkForm);
     setSuccessMessage("Coursework berhasil ditambahkan.");
+    showToast("success", "Coursework berhasil ditambahkan.");
     await loadDashboard();
   }
 
@@ -783,12 +829,14 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setEditingExperienceId(null);
     setExperienceForm(initialExperienceForm);
     setSuccessMessage("Experience berhasil ditambahkan.");
+    showToast("success", "Experience berhasil ditambahkan.");
     await loadDashboard();
   }
 
@@ -816,12 +864,14 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setEditingExperienceId(null);
     setExperienceForm(initialExperienceForm);
     setSuccessMessage("Experience berhasil diperbarui.");
+    showToast("success", "Experience berhasil diperbarui.");
     await loadDashboard();
   }
 
@@ -859,12 +909,14 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setEditingCertificateId(null);
     setCertificateForm(initialCertificateForm);
     setSuccessMessage("Certificate berhasil ditambahkan.");
+    showToast("success", "Certificate berhasil ditambahkan.");
     await loadDashboard();
   }
 
@@ -891,12 +943,14 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setEditingCertificateId(null);
     setCertificateForm(initialCertificateForm);
     setSuccessMessage("Certificate berhasil diperbarui.");
+    showToast("success", "Certificate berhasil diperbarui.");
     await loadDashboard();
   }
 
@@ -938,10 +992,12 @@ export default function AdminPage() {
 
     if (error) {
       setDashboardError(error.message);
+      showToast("error", error.message);
       return;
     }
 
     setSuccessMessage("Data berhasil dihapus.");
+    showToast("success", "Data berhasil dihapus.");
     await loadDashboard();
   }
 
@@ -962,20 +1018,147 @@ export default function AdminPage() {
       className="h-screen overflow-hidden bg-[#eeebff] text-[#2f245b]"
       style={{ fontFamily: "var(--font-bungee)" }}
     >
-      <div className="grid h-screen w-full overflow-hidden bg-[#5429cf] shadow-[0_24px_90px_rgba(96,70,193,0.16)] lg:grid-cols-[108px_1fr]">
-        <aside className="z-0 flex h-screen flex-col px-4 py-8 text-[#14c1e7]">
+      {toast && (
+        <div className="pointer-events-none fixed inset-x-4 top-4 z-[120] flex justify-center sm:justify-end">
+          <div
+            className={`pointer-events-auto w-full max-w-sm rounded-[1.35rem] border px-4 py-3 text-sm shadow-[0_18px_50px_rgba(25,18,64,0.2)] ${
+              toast.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : toast.type === "error"
+                  ? "border-rose-200 bg-rose-50 text-rose-700"
+                  : "border-sky-200 bg-sky-50 text-sky-700"
+            }`}
+          >
+            {toast.message}
+          </div>
+        </div>
+      )}
+
+      <div
+        className={`fixed inset-0 z-[110] bg-black/30 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
+          isMobileSidebarOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => {
+          setIsMobileSidebarOpen(false);
+        }}
+      />
+
+      <div
+        className={`fixed inset-y-0 left-0 z-[111] w-[17.5rem] bg-[#5429cf] px-5 py-5 text-[#14c1e7] shadow-[0_24px_60px_rgba(28,13,85,0.3)] transition-transform duration-300 lg:hidden ${
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between">
+            <div
+              className="text-[0.92rem] leading-none tracking-[0.02em] font-bold"
+              style={{ fontFamily: "var(--font-bungee)" }}
+            >
+              AKBAR
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileSidebarOpen(false);
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/8 text-[#14c1e7]"
+              aria-label="Close navigation"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="mt-8 flex flex-1 flex-col gap-4">
+            {sidebarItems.map((item, index) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => {
+                  setIsMobileSidebarOpen(false);
+                }}
+                className={`flex items-center gap-4 rounded-[1rem] px-4 py-3 text-left transition-all duration-300 ${
+                  index === 0
+                    ? "bg-[#4520b8] text-[#12d3ef] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    : "text-[#12d3ef] hover:bg-white/8"
+                } ${
+                  isMobileSidebarOpen
+                    ? "translate-x-0 opacity-100"
+                    : "translate-x-4 opacity-0"
+                }`}
+                style={{
+                  transitionDelay: isMobileSidebarOpen
+                    ? `${80 + index * 45}ms`
+                    : "0ms",
+                }}
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] bg-black/10">
+                  <SidebarGlyph label={item.label} />
+                </span>
+                <span className="text-sm">{item.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className={`mt-6 flex items-center gap-4 rounded-[1rem] px-4 py-3 text-left text-[#12d3ef] transition-all duration-300 hover:bg-white/8 ${
+              isMobileSidebarOpen
+                ? "translate-x-0 opacity-100"
+                : "translate-x-4 opacity-0"
+            }`}
+            style={{
+              transitionDelay: isMobileSidebarOpen
+                ? `${80 + sidebarItems.length * 45}ms`
+                : "0ms",
+            }}
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] bg-black/10">
+              <SidebarGlyph label="Settings" />
+            </span>
+            <span className="text-sm">Settings</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-[#5429cf] shadow-[0_24px_90px_rgba(96,70,193,0.16)] lg:grid lg:grid-cols-[108px_1fr]">
+        <div className="flex items-center justify-between px-4 py-4 text-[#14c1e7] lg:hidden">
+          <div
+            className="text-[0.9rem] leading-none tracking-[0.02em] font-bold"
+            style={{ fontFamily: "var(--font-bungee)" }}
+          >
+            AKBAR
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileSidebarOpen(true);
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white/8"
+            aria-label="Open navigation"
+          >
+            <span className="flex flex-col gap-1.5">
+              <span className="h-0.5 w-5 bg-[#14c1e7]" />
+              <span className="h-0.5 w-5 bg-[#14c1e7]" />
+              <span className="h-0.5 w-5 bg-[#14c1e7]" />
+            </span>
+          </button>
+        </div>
+
+        <aside className="z-0 hidden h-screen flex-col px-4 py-8 text-[#14c1e7] lg:flex">
           <div
             className="text-center text-[0.84rem] leading-none tracking-[0.02em] font-bold"
             style={{ fontFamily: "var(--font-bungee)" }}
           >
             AKBAR
           </div>
-          <div className="mt-10 flex flex-1 flex-col items-center gap-6">
+          <div className="flex flex-1 items-center justify-center gap-3 px-3 lg:mt-10 lg:flex-col lg:px-0 lg:gap-6">
             {sidebarItems.map((item, index) => (
               <button
                 key={item.label}
                 type="button"
-                className={`flex h-[3.15rem] w-[3.15rem] items-center justify-center rounded-[1rem] transition ${
+                className={`flex h-[2.9rem] w-[2.9rem] items-center justify-center rounded-[1rem] transition sm:h-[3.05rem] sm:w-[3.05rem] ${
                   index === 0
                     ? "bg-[#4520b8] text-[#12d3ef] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     : "text-[#12d3ef] hover:bg-white/8"
@@ -986,10 +1169,10 @@ export default function AdminPage() {
               </button>
             ))}
           </div>
-          <div className="flex justify-center pt-3">
+          <div className="flex justify-center pl-3 lg:pt-3 lg:pl-0">
             <button
               type="button"
-              className="flex h-[3.15rem] w-[3.15rem] items-center justify-center rounded-[1rem] text-[#12d3ef] transition hover:bg-white/8"
+              className="flex h-[2.9rem] w-[2.9rem] items-center justify-center rounded-[1rem] text-[#12d3ef] transition hover:bg-white/8 sm:h-[3.05rem] sm:w-[3.05rem]"
               aria-label="Settings"
             >
               <SidebarGlyph label="Settings" />
@@ -997,8 +1180,8 @@ export default function AdminPage() {
           </div>
         </aside>
 
-        <div className="relative z-10 -ml-2 h-screen overflow-y-auto rounded-l-[2.2rem] bg-white">
-          <section className="px-5 py-4 sm:px-6">
+        <div className="relative z-10 h-full overflow-y-auto rounded-t-[2rem] bg-white lg:-ml-2 lg:h-screen lg:rounded-t-none lg:rounded-l-[2.2rem]">
+          <section className="px-4 py-4 sm:px-6">
             <div className="space-y-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-1 items-center gap-3 rounded-[1.35rem] bg-[#f4f0ff] px-4 py-3 text-sm text-[#8d83bc]">
@@ -1137,7 +1320,7 @@ export default function AdminPage() {
                       </p>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
                       <StatCard label="Projects" value={String(projects.length)} />
                       <StatCard label="Stack" value={String(stackItems.length)} />
                       <StatCard label="Experience" value={String(experienceRows.length)} />
@@ -1191,7 +1374,7 @@ export default function AdminPage() {
                         <p className="text-sm text-[#8d83bc]">Belum ada project.</p>
                       ) : (
                         <div className="overflow-hidden rounded-[1.6rem] bg-[#f7f4ff]">
-                          <div className="grid grid-cols-[1.4fr_0.8fr_0.7fr_0.9fr_80px] gap-3 px-4 py-3 text-[0.72rem] uppercase tracking-[0.12em] text-[#8f86bc]">
+                          <div className="hidden grid-cols-[1.4fr_0.8fr_0.7fr_0.9fr_80px] gap-3 px-4 py-3 text-[0.72rem] uppercase tracking-[0.12em] text-[#8f86bc] sm:grid">
                             <span>Name</span>
                             <span>Category</span>
                             <span>Year</span>
@@ -1199,26 +1382,45 @@ export default function AdminPage() {
                             <span className="text-right">Action</span>
                           </div>
                           {recentContent.map((item) => (
-                            <div
-                              key={item.id}
-                              className="grid grid-cols-[1.4fr_0.8fr_0.7fr_0.9fr_80px] gap-3 border-t border-white px-4 py-3 text-sm text-[#4c4178]"
-                            >
-                              <div>
-                                <p>{item.title}</p>
-                                <p className="text-xs text-[#9a91c4]">{item.slug}</p>
+                            <div key={item.id}>
+                              <div className="border-t border-white px-4 py-4 text-sm text-[#4c4178] sm:hidden">
+                                <div>
+                                  <p>{item.title}</p>
+                                  <p className="text-xs text-[#9a91c4]">{item.slug}</p>
+                                  <p className="mt-2 text-xs text-[#8f86bc]">
+                                    {item.category || "General"} • {item.year ?? "-"} • {item.status}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void removeRow("projects", item.id);
+                                  }}
+                                  className="mt-3 text-sm text-[#5b33d6]"
+                                >
+                                  Remove
+                                </button>
                               </div>
-                              <span>{item.category || "General"}</span>
-                              <span>{item.year ?? "-"}</span>
-                              <span>{item.status}</span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  void removeRow("projects", item.id);
-                                }}
-                                className="text-right text-[#5b33d6]"
+                              <div
+                                className="hidden grid-cols-[1.4fr_0.8fr_0.7fr_0.9fr_80px] gap-3 border-t border-white px-4 py-3 text-sm text-[#4c4178] sm:grid"
                               >
-                                •••
-                              </button>
+                                <div>
+                                  <p>{item.title}</p>
+                                  <p className="text-xs text-[#9a91c4]">{item.slug}</p>
+                                </div>
+                                <span>{item.category || "General"}</span>
+                                <span>{item.year ?? "-"}</span>
+                                <span>{item.status}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void removeRow("projects", item.id);
+                                  }}
+                                  className="text-right text-[#5b33d6]"
+                                >
+                                  •••
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
