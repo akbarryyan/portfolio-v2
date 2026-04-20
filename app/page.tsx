@@ -870,6 +870,28 @@ export default function Home() {
   );
 
   useEffect(() => {
+    if (isIntroFinished) {
+      document.documentElement.style.overflow = "";
+      document.documentElement.style.touchAction = "";
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+      return;
+    }
+
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.touchAction = "none";
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.documentElement.style.touchAction = "";
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    };
+  }, [isIntroFinished]);
+
+  useEffect(() => {
     const lenis = new Lenis({
       duration: prefersReducedMotion ? 0.9 : 1.05,
       smoothWheel: true,
@@ -2358,22 +2380,24 @@ export default function Home() {
               </div>
 
               <div
-                className="flex flex-col items-start gap-3 border-t border-white/8 pt-5 text-[0.68rem] uppercase tracking-[0.1em] text-white/34 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:text-[0.8rem] sm:tracking-[0.12em]"
+                className="flex flex-col gap-3 border-t border-white/8 pt-5 text-[0.68rem] uppercase tracking-[0.1em] text-white/34 sm:text-[0.8rem] sm:tracking-[0.12em]"
                 style={{ fontFamily: "var(--font-bungee)" }}
               >
-                <span>All rights reserved.</span>
-                <span className="inline-flex flex-wrap items-center gap-2 leading-6 sm:justify-end">
-                  powered with
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3.5 w-3.5 text-[#ff6b8b]"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 21.2 10.55 19.88C5.4 15.22 2 12.14 2 8.36 2 5.28 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.28 22 8.36c0 3.78-3.4 6.86-8.55 11.53L12 21.2Z" />
-                  </svg>
-                  by Akbar
-                </span>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span>All rights reserved.</span>
+                  <span className="inline-flex items-center gap-2 leading-6">
+                    powered with
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-3.5 w-3.5 text-[#ff6b8b]"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 21.2 10.55 19.88C5.4 15.22 2 12.14 2 8.36 2 5.28 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.28 22 8.36c0 3.78-3.4 6.86-8.55 11.53L12 21.2Z" />
+                    </svg>
+                  </span>
+                </div>
+                <div className="text-center">by Akbar</div>
               </div>
             </motion.footer>
           </motion.div>
