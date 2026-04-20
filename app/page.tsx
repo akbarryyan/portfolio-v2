@@ -1390,7 +1390,10 @@ export default function Home() {
                 <span className="h-px w-8 bg-white/16" />
                 <span>{profileContent.location}</span>
                 <span className="h-px w-8 bg-white/16" />
-                <span className="inline-flex items-center gap-2 normal-case tracking-normal text-white/72">
+                <span
+                  className="inline-flex items-center gap-2 normal-case tracking-normal text-white/72"
+                  style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                >
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(74,222,128,0.6)]" />
                   {profileContent.availability}
                 </span>
@@ -1464,7 +1467,10 @@ export default function Home() {
                   <span className="mx-2 text-white/28">—</span>
                   {profileContent.location}
                 </p>
-                <p className="inline-flex items-center gap-2 text-sm text-white/78">
+                <p
+                  className="inline-flex items-center gap-2 text-sm text-white/78"
+                  style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                >
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(74,222,128,0.6)]" />
                   {profileContent.availability}
                 </p>
@@ -2369,14 +2375,6 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div
-                  className="flex flex-wrap gap-x-4 gap-y-2 text-[0.76rem] uppercase tracking-[0.12em] text-white/42 sm:text-[0.82rem]"
-                  style={{ fontFamily: "var(--font-bungee)" }}
-                >
-                  <span>Portfolio 2026</span>
-                  <span>{profileContent.location}</span>
-                  <span>{profileContent.availability}</span>
-                </div>
               </div>
 
               <div
