@@ -2358,11 +2358,11 @@ export default function Home() {
               </div>
 
               <div
-                className="flex items-center justify-between gap-4 border-t border-white/8 pt-5 text-[0.72rem] uppercase tracking-[0.12em] text-white/34 sm:text-[0.8rem]"
+                className="flex flex-col items-start gap-3 border-t border-white/8 pt-5 text-[0.68rem] uppercase tracking-[0.1em] text-white/34 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:text-[0.8rem] sm:tracking-[0.12em]"
                 style={{ fontFamily: "var(--font-bungee)" }}
               >
                 <span>All rights reserved.</span>
-                <span className="inline-flex items-center gap-2">
+                <span className="inline-flex flex-wrap items-center gap-2 leading-6 sm:justify-end">
                   powered with
                   <svg
                     viewBox="0 0 24 24"
