@@ -1354,8 +1354,8 @@ export default function Home() {
             </motion.p>
           </div>
 
-          <div className="grid flex-1 items-end gap-8 pt-6 sm:gap-10 sm:pt-10 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="space-y-5 self-end pb-8 sm:space-y-10 sm:pb-14 lg:pb-18">
+          <div className="grid flex-1 items-start gap-8 pt-4 sm:gap-10 sm:pt-6 lg:grid-cols-[1.08fr_0.92fr]">
+            <div className="space-y-5 self-start pt-4 sm:space-y-10 sm:pt-8 lg:pt-10">
               <motion.div
                 variants={heroItem}
                 className="space-y-2 sm:hidden"
@@ -1400,7 +1400,7 @@ export default function Home() {
               </motion.p>
             </div>
 
-            <div className="hidden h-full items-start pt-2 lg:grid lg:justify-items-end lg:pt-24 xl:pt-28">
+            <div className="hidden h-full items-start pt-2 lg:grid lg:justify-items-end lg:pt-14 xl:pt-18">
               <motion.div
                 variants={heroContainer}
                 className="w-full max-w-none space-y-6 rounded-[1.5rem] border border-white/8 bg-white/[0.03] p-5 text-left backdrop-blur-sm sm:max-w-[21rem] sm:space-y-7 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:text-right xl:translate-y-8"
