@@ -19,6 +19,9 @@ type ProfileRow = {
   location: string | null;
   availability: string | null;
   cv_url: string | null;
+  contact_email: string | null;
+  contact_cta_text: string | null;
+  footer_summary: string | null;
   is_public: boolean;
   updated_at: string;
 };
@@ -91,6 +94,9 @@ const initialProfileForm = {
   location: "",
   availability: "Available for work",
   cv_url: "",
+  contact_email: "",
+  contact_cta_text: "",
+  footer_summary: "",
 };
 
 const initialProjectForm = {
@@ -415,7 +421,7 @@ export default function AdminPage() {
         supabase
           .from("profile")
           .select(
-            "id, auth_user_id, display_name, headline, bio, location, availability, cv_url, is_public, updated_at",
+            "id, auth_user_id, display_name, headline, bio, location, availability, cv_url, contact_email, contact_cta_text, footer_summary, is_public, updated_at",
           )
           .order("updated_at", { ascending: false })
           .limit(1)
@@ -495,6 +501,9 @@ export default function AdminPage() {
         location: nextProfile.location ?? "",
         availability: nextProfile.availability ?? "Available for work",
         cv_url: nextProfile.cv_url ?? "",
+        contact_email: nextProfile.contact_email ?? "",
+        contact_cta_text: nextProfile.contact_cta_text ?? "",
+        footer_summary: nextProfile.footer_summary ?? "",
       });
     }
   }
@@ -1266,6 +1275,18 @@ export default function AdminPage() {
                               }}
                             />
                           </Field>
+                          <Field label="Contact Email">
+                            <Input
+                              value={profileForm.contact_email}
+                              onChange={(event) => {
+                                setProfileForm((current) => ({
+                                  ...current,
+                                  contact_email: event.target.value,
+                                }));
+                              }}
+                              placeholder="akbarrayyan182@gmail.com"
+                            />
+                          </Field>
                         </div>
                         <div className="mt-4 space-y-4">
                           <Field label="Bio">
@@ -1288,6 +1309,30 @@ export default function AdminPage() {
                                   cv_url: event.target.value,
                                 }));
                               }}
+                            />
+                          </Field>
+                          <Field label="Contact CTA Text">
+                            <Textarea
+                              value={profileForm.contact_cta_text}
+                              onChange={(event) => {
+                                setProfileForm((current) => ({
+                                  ...current,
+                                  contact_cta_text: event.target.value,
+                                }));
+                              }}
+                              placeholder="Available for freelance work, internships, collaboration..."
+                            />
+                          </Field>
+                          <Field label="Footer Summary">
+                            <Textarea
+                              value={profileForm.footer_summary}
+                              onChange={(event) => {
+                                setProfileForm((current) => ({
+                                  ...current,
+                                  footer_summary: event.target.value,
+                                }));
+                              }}
+                              placeholder="Fullstack developer focused on building fast, reliable, and scalable digital products."
                             />
                           </Field>
                         </div>

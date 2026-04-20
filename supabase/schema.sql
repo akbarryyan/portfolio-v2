@@ -50,6 +50,9 @@ create table if not exists public.profile (
   location text,
   availability text default 'Available for work',
   cv_url text,
+  contact_email text,
+  contact_cta_text text,
+  footer_summary text,
   avatar_url text,
   is_public boolean not null default true,
   created_at timestamptz not null default now(),
@@ -57,6 +60,11 @@ create table if not exists public.profile (
   constraint profile_auth_user_id_fkey
     foreign key (auth_user_id) references auth.users (id) on delete set null
 );
+
+alter table public.profile
+  add column if not exists contact_email text,
+  add column if not exists contact_cta_text text,
+  add column if not exists footer_summary text;
 
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),

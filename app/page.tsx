@@ -246,6 +246,11 @@ const fallbackProfile = {
   location: "Indonesia",
   availability: "Available for work",
   cvUrl: "#about",
+  contactEmail: "akbarrayyan182@gmail.com",
+  contactCtaText:
+    "Available for freelance work, internships, collaboration, and backend or fullstack opportunities. If you have an idea or a role in mind, feel free to reach out.",
+  footerSummary:
+    "Fullstack developer focused on building fast, reliable, and scalable digital products.",
 };
 
 const fallbackEducation = {
@@ -324,6 +329,9 @@ type ProfileRow = {
   location: string | null;
   availability: string | null;
   cv_url: string | null;
+  contact_email: string | null;
+  contact_cta_text: string | null;
+  footer_summary: string | null;
 };
 
 type StackItemRow = {
@@ -493,6 +501,10 @@ function buildProfileContent(profile: ProfileRow | null | undefined): ProfileCon
     location: profile.location || fallbackProfile.location,
     availability: profile.availability || fallbackProfile.availability,
     cvUrl: profile.cv_url || fallbackProfile.cvUrl,
+    contactEmail: profile.contact_email || fallbackProfile.contactEmail,
+    contactCtaText:
+      profile.contact_cta_text || fallbackProfile.contactCtaText,
+    footerSummary: profile.footer_summary || fallbackProfile.footerSummary,
   };
 }
 
@@ -1008,7 +1020,9 @@ export default function Home() {
         await Promise.all([
           supabase
             .from("profile")
-            .select("display_name, headline, bio, location, availability, cv_url")
+            .select(
+              "display_name, headline, bio, location, availability, cv_url, contact_email, contact_cta_text, footer_summary",
+            )
             .eq("is_public", true)
             .order("updated_at", { ascending: false })
             .limit(1)
@@ -2210,6 +2224,139 @@ export default function Home() {
                 </div>
               </div>
             </motion.section>
+
+            <motion.section
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: false, amount: 0.18 }}
+              variants={overlayItemVariant}
+              id="contact"
+              className="border-t border-white/8 bg-black px-4 py-12 text-white sm:px-10 sm:py-16 lg:px-12 xl:px-16"
+            >
+              <div className="space-y-10 sm:space-y-14">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="space-y-4">
+                    <p
+                      className="text-[0.72rem] uppercase tracking-[0.34em] text-white/38"
+                      style={{ fontFamily: "var(--font-bungee)" }}
+                    >
+                      08 — Contact
+                    </p>
+                    <h2
+                      className="max-w-[10ch] text-[2.8rem] leading-[0.92] tracking-[-0.08em] text-white sm:text-[4.9rem] lg:text-[6.2rem]"
+                      style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                    >
+                      Let&apos;s build something meaningful together.
+                    </h2>
+                  </div>
+
+                  <p
+                    className="max-w-xl text-sm leading-7 text-white/58 sm:text-[1rem] sm:leading-8"
+                    style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                  >
+                    Available for freelance work, internships, collaboration,
+                    and backend or fullstack opportunities. If you have an idea
+                    or a role in mind, feel free to reach out.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+                  <motion.div
+                    variants={overlayItemVariant}
+                    className="rounded-[1.8rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8"
+                  >
+                    <div className="space-y-5">
+                      <p
+                        className="text-[0.72rem] uppercase tracking-[0.18em] text-white/42"
+                        style={{ fontFamily: "var(--font-bungee)" }}
+                      >
+                        Direct Contact
+                      </p>
+                      <a
+                        href={`mailto:${profileContent.contactEmail}`}
+                        className="block text-[1.7rem] leading-[1.02] tracking-[-0.05em] text-white transition-opacity duration-300 hover:opacity-80 sm:text-[2.8rem]"
+                        style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                      >
+                        {profileContent.contactEmail}
+                      </a>
+                      <p
+                        className="max-w-2xl text-sm leading-7 text-white/58 sm:text-[0.98rem] sm:leading-8"
+                        style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                      >
+                        {profileContent.contactCtaText}
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    variants={overlayItemVariant}
+                    className="space-y-4 rounded-[1.8rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8"
+                  >
+                    <p
+                      className="text-[0.72rem] uppercase tracking-[0.18em] text-white/42"
+                      style={{ fontFamily: "var(--font-bungee)" }}
+                    >
+                      Links
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      {socialItems.map((item) => (
+                        <a
+                          key={item.label}
+                          href={item.url}
+                          className="inline-flex items-center justify-between rounded-full border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/78 transition-colors duration-300 hover:border-white/20 hover:text-white sm:text-[0.95rem]"
+                          style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                        >
+                          <span>{item.label}</span>
+                          <span>↗</span>
+                        </a>
+                      ))}
+                      <a
+                        href={profileContent.cvUrl}
+                        className="inline-flex items-center justify-between rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition-transform duration-300 hover:-translate-y-0.5 sm:text-[0.95rem]"
+                        style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                      >
+                        <span>Download CV</span>
+                        <span>↓</span>
+                      </a>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.section>
+
+            <motion.footer
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: false, amount: 0.18 }}
+              variants={overlayItemVariant}
+              className="border-t border-white/8 bg-[#050505] px-4 py-8 text-white sm:px-10 sm:py-10 lg:px-12 xl:px-16"
+            >
+              <div className="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="space-y-2">
+                  <p
+                    className="text-[0.72rem] uppercase tracking-[0.18em] text-white/34"
+                    style={{ fontFamily: "var(--font-bungee)" }}
+                  >
+                    {profileContent.displayName}
+                  </p>
+                  <p
+                    className="text-sm leading-7 text-white/52 sm:text-[0.96rem]"
+                    style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+                  >
+                    {profileContent.footerSummary}
+                  </p>
+                </div>
+
+                <div
+                  className="flex flex-wrap gap-x-4 gap-y-2 text-[0.76rem] uppercase tracking-[0.12em] text-white/42 sm:text-[0.82rem]"
+                  style={{ fontFamily: "var(--font-bungee)" }}
+                >
+                  <span>Portfolio 2026</span>
+                  <span>{profileContent.location}</span>
+                  <span>{profileContent.availability}</span>
+                </div>
+              </div>
+            </motion.footer>
           </motion.div>
         </motion.section>
       </div>
