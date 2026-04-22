@@ -46,7 +46,8 @@ const fallbackStackSections: Array<{
   title: string;
   items: Array<{
     name: string;
-    icon: string;
+    icon?: string | null;
+    iconClass?: string | null;
     className?: string;
   }>;
 }> = [
@@ -337,7 +338,8 @@ type ProfileRow = {
 type StackItemRow = {
   name: string;
   category: string;
-  icon_url: string;
+  icon_url: string | null;
+  icon_class: string | null;
 };
 
 type SocialLinkRow = {
@@ -388,7 +390,11 @@ const fallbackProjectSurfaces: ProjectScreen[] = fallbackProjectItems.flatMap(
   (item) => item.screens,
 );
 
-function inferStackClass(iconUrl: string) {
+function inferStackClass(iconUrl: string | null | undefined) {
+  if (!iconUrl) {
+    return undefined;
+  }
+
   const normalized = iconUrl.toLowerCase();
 
   if (normalized.includes("nextjs") || normalized.includes("threejs")) {
@@ -414,9 +420,14 @@ function buildStackSections(rows: StackItemRow[] | null | undefined): StackSecti
     (accumulator, row) => {
       const key = row.category || "Other";
       accumulator[key] ??= [];
+      if (!row.icon_url && !row.icon_class) {
+        return accumulator;
+      }
+
       accumulator[key].push({
         name: row.name,
         icon: row.icon_url,
+        iconClass: row.icon_class,
         className: inferStackClass(row.icon_url),
       });
       return accumulator;
@@ -642,22 +653,35 @@ const backgroundBands = [
 function StackGlyph({
   name,
   icon,
+  iconClass,
   className,
 }: Readonly<{
   name: string;
-  icon: string;
+  icon?: string | null;
+  iconClass?: string | null;
   className?: string;
 }>) {
   return (
     <div className="flex min-w-28 flex-col items-center justify-center gap-3 px-2 py-2 text-center">
-      <Image
-        src={icon}
-        alt={name}
-        width={96}
-        height={96}
-        unoptimized
-        className={`h-20 w-20 object-contain sm:h-24 sm:w-24 ${className ?? ""}`}
-      />
+      {iconClass ? (
+        <div className="flex h-20 w-20 items-center justify-center sm:h-24 sm:w-24">
+          <i
+            aria-hidden="true"
+            className={`${iconClass} text-[3.1rem] leading-none text-white sm:text-[3.55rem] ${className ?? ""}`}
+          />
+        </div>
+      ) : icon ? (
+        <Image
+          src={icon}
+          alt={name}
+          width={96}
+          height={96}
+          unoptimized
+          className={`h-20 w-20 object-contain sm:h-24 sm:w-24 ${className ?? ""}`}
+        />
+      ) : (
+        <div className="h-20 w-20 rounded-full bg-white/10 sm:h-24 sm:w-24" />
+      )}
       <p
         className="max-w-[7.5rem] text-[0.68rem] leading-[1.35] font-medium uppercase tracking-[0.16em] text-white/62 sm:max-w-[8.75rem] sm:text-[0.74rem]"
         style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
@@ -1057,7 +1081,7 @@ export default function Home() {
             .maybeSingle(),
           supabase
             .from("stack_items")
-            .select("name, category, icon_url")
+            .select("name, category, icon_url, icon_class")
             .eq("is_active", true)
             .order("sort_order", { ascending: true }),
           supabase
@@ -1824,6 +1848,7 @@ export default function Home() {
                             <StackGlyph
                               name={item.name}
                               icon={item.icon}
+                              iconClass={item.iconClass}
                               className={item.className}
                             />
                           </div>

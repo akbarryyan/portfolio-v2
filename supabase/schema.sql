@@ -137,13 +137,20 @@ create table if not exists public.stack_items (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   category text not null,
-  icon_url text not null,
+  icon_url text,
+  icon_class text,
   website_url text,
   sort_order integer not null default 0,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.stack_items
+  add column if not exists icon_class text;
+
+alter table public.stack_items
+  alter column icon_url drop not null;
 
 create table if not exists public.social_links (
   id uuid primary key default gen_random_uuid(),

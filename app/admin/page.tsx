@@ -46,7 +46,8 @@ type StackItemRow = {
   id: string;
   name: string;
   category: string;
-  icon_url: string;
+  icon_url: string | null;
+  icon_class: string | null;
   is_active: boolean;
   updated_at: string;
 };
@@ -116,6 +117,7 @@ const initialStackForm = {
   name: "",
   category: "",
   icon_url: "",
+  icon_class: "",
 };
 
 const initialSocialForm = {
@@ -381,6 +383,42 @@ function SearchIcon() {
   );
 }
 
+function StackIconPreview({
+  name,
+  iconUrl,
+  iconClass,
+}: Readonly<{
+  name: string;
+  iconUrl?: string | null;
+  iconClass?: string | null;
+}>) {
+  if (iconClass) {
+    return (
+      <div className="flex h-8 w-8 items-center justify-center">
+        <i
+          aria-hidden="true"
+          className={`${iconClass} text-[1.8rem] leading-none text-[#5b33d6]`}
+        />
+      </div>
+    );
+  }
+
+  if (iconUrl) {
+    return (
+      <Image
+        src={iconUrl}
+        alt={name}
+        width={32}
+        height={32}
+        unoptimized
+        className="h-8 w-8 object-contain"
+      />
+    );
+  }
+
+  return <div className="h-8 w-8 rounded-full bg-[#e2dcff]" />;
+}
+
 export default function AdminPage() {
   const pathname = usePathname();
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
@@ -479,7 +517,7 @@ export default function AdminPage() {
           .order("created_at", { ascending: false }),
         supabase
           .from("stack_items")
-          .select("id, name, category, icon_url, is_active, updated_at")
+          .select("id, name, category, icon_url, icon_class, is_active, updated_at")
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: false }),
         supabase
@@ -733,6 +771,13 @@ export default function AdminPage() {
   }
 
   async function addStackItem() {
+    if (!stackForm.icon_url.trim() && !stackForm.icon_class.trim()) {
+      const message = "Isi minimal Icon URL atau Icon Class untuk stack item.";
+      setDashboardError(message);
+      showToast("error", message);
+      return;
+    }
+
     setIsSaving(true);
     setSuccessMessage(null);
     setDashboardError(null);
@@ -740,7 +785,8 @@ export default function AdminPage() {
     const { error } = await supabase.from("stack_items").insert({
       name: stackForm.name,
       category: stackForm.category,
-      icon_url: stackForm.icon_url,
+      icon_url: stackForm.icon_url || null,
+      icon_class: stackForm.icon_class || null,
     });
 
     setIsSaving(false);
@@ -1728,6 +1774,18 @@ export default function AdminPage() {
                                   }}
                                 />
                               </Field>
+                              <Field label="Icon Class">
+                                <Input
+                                  value={stackForm.icon_class}
+                                  onChange={(event) => {
+                                    setStackForm((current) => ({
+                                      ...current,
+                                      icon_class: event.target.value,
+                                    }));
+                                  }}
+                                  placeholder="devicon-angularjs-plain"
+                                />
+                              </Field>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1762,13 +1820,10 @@ export default function AdminPage() {
                                       className="flex items-center gap-3 rounded-[1.2rem] border border-white bg-white px-3 py-3"
                                     >
                                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] bg-[#f2eeff]">
-                                        <Image
-                                          src={item.icon_url}
-                                          alt={item.name}
-                                          width={32}
-                                          height={32}
-                                          unoptimized
-                                          className="h-8 w-8 object-contain"
+                                        <StackIconPreview
+                                          name={item.name}
+                                          iconUrl={item.icon_url}
+                                          iconClass={item.icon_class}
                                         />
                                       </div>
                                       <div className="min-w-0 flex-1">

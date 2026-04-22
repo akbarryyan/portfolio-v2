@@ -16,7 +16,8 @@ type StackItemRow = {
   id: string;
   name: string;
   category: string;
-  icon_url: string;
+  icon_url: string | null;
+  icon_class: string | null;
   website_url: string | null;
   sort_order: number;
   is_active: boolean;
@@ -34,6 +35,7 @@ const initialStackForm = {
   name: "",
   category: "",
   icon_url: "",
+  icon_class: "",
   website_url: "",
   sort_order: "0",
 };
@@ -219,6 +221,42 @@ function SearchIcon() {
   );
 }
 
+function StackIconPreview({
+  name,
+  iconUrl,
+  iconClass,
+}: Readonly<{
+  name: string;
+  iconUrl?: string | null;
+  iconClass?: string | null;
+}>) {
+  if (iconClass) {
+    return (
+      <div className="flex h-10 w-10 items-center justify-center">
+        <i
+          aria-hidden="true"
+          className={`${iconClass} text-[2.2rem] leading-none text-[#5b33d6]`}
+        />
+      </div>
+    );
+  }
+
+  if (iconUrl) {
+    return (
+      <Image
+        src={iconUrl}
+        alt={name}
+        width={40}
+        height={40}
+        unoptimized
+        className="h-10 w-10 object-contain"
+      />
+    );
+  }
+
+  return <div className="h-10 w-10 rounded-full bg-[#e2dcff]" />;
+}
+
 export default function AdminStackPage() {
   const pathname = usePathname();
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
@@ -272,7 +310,7 @@ export default function AdminStackPage() {
     const { data, error } = await supabase
       .from("stack_items")
       .select(
-        "id, name, category, icon_url, website_url, sort_order, is_active, updated_at",
+        "id, name, category, icon_url, icon_class, website_url, sort_order, is_active, updated_at",
       )
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
@@ -405,6 +443,13 @@ export default function AdminStackPage() {
   }
 
   async function addStackItem() {
+    if (!stackForm.icon_url.trim() && !stackForm.icon_class.trim()) {
+      const message = "Isi minimal Icon URL atau Icon Class untuk stack item.";
+      setDashboardError(message);
+      showToast("error", message);
+      return;
+    }
+
     setIsSaving(true);
     setSuccessMessage(null);
     setDashboardError(null);
@@ -412,7 +457,8 @@ export default function AdminStackPage() {
     const { error } = await supabase.from("stack_items").insert({
       name: stackForm.name,
       category: stackForm.category,
-      icon_url: stackForm.icon_url,
+      icon_url: stackForm.icon_url || null,
+      icon_class: stackForm.icon_class || null,
       website_url: stackForm.website_url || null,
       sort_order: Number(stackForm.sort_order || 0),
     });
@@ -436,6 +482,13 @@ export default function AdminStackPage() {
       return;
     }
 
+    if (!stackForm.icon_url.trim() && !stackForm.icon_class.trim()) {
+      const message = "Isi minimal Icon URL atau Icon Class untuk stack item.";
+      setDashboardError(message);
+      showToast("error", message);
+      return;
+    }
+
     setIsSaving(true);
     setSuccessMessage(null);
     setDashboardError(null);
@@ -445,7 +498,8 @@ export default function AdminStackPage() {
       .update({
         name: stackForm.name,
         category: stackForm.category,
-        icon_url: stackForm.icon_url,
+        icon_url: stackForm.icon_url || null,
+        icon_class: stackForm.icon_class || null,
         website_url: stackForm.website_url || null,
         sort_order: Number(stackForm.sort_order || 0),
       })
@@ -471,7 +525,8 @@ export default function AdminStackPage() {
     setStackForm({
       name: item.name,
       category: item.category,
-      icon_url: item.icon_url,
+      icon_url: item.icon_url ?? "",
+      icon_class: item.icon_class ?? "",
       website_url: item.website_url ?? "",
       sort_order: String(item.sort_order),
     });
@@ -945,6 +1000,18 @@ export default function AdminStackPage() {
                               placeholder="https://cdn.jsdelivr.net/..."
                             />
                           </Field>
+                          <Field label="Icon Class">
+                            <Input
+                              value={stackForm.icon_class}
+                              onChange={(event) => {
+                                setStackForm((current) => ({
+                                  ...current,
+                                  icon_class: event.target.value,
+                                }));
+                              }}
+                              placeholder="devicon-angularjs-plain"
+                            />
+                          </Field>
                           <Field label="Website URL">
                             <Input
                               value={stackForm.website_url}
@@ -977,18 +1044,11 @@ export default function AdminStackPage() {
                           </p>
                           <div className="mt-4 flex items-center gap-4 rounded-[1.2rem] bg-white p-4">
                             <div className="flex h-16 w-16 items-center justify-center rounded-[1.1rem] bg-[#f2eeff]">
-                              {stackForm.icon_url ? (
-                                <Image
-                                  src={stackForm.icon_url}
-                                  alt={stackForm.name || "Stack icon"}
-                                  width={40}
-                                  height={40}
-                                  unoptimized
-                                  className="h-10 w-10 object-contain"
-                                />
-                              ) : (
-                                <div className="h-10 w-10 rounded-full bg-[#e2dcff]" />
-                              )}
+                              <StackIconPreview
+                                name={stackForm.name || "Stack icon"}
+                                iconUrl={stackForm.icon_url}
+                                iconClass={stackForm.icon_class}
+                              />
                             </div>
                             <div>
                               <p className="text-sm text-[#2f245b]">
@@ -1052,13 +1112,10 @@ export default function AdminStackPage() {
                               >
                                 <div className="flex min-w-0 items-center gap-4">
                                   <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.1rem] bg-white">
-                                    <Image
-                                      src={item.icon_url}
-                                      alt={item.name}
-                                      width={40}
-                                      height={40}
-                                      unoptimized
-                                      className="h-10 w-10 object-contain"
+                                    <StackIconPreview
+                                      name={item.name}
+                                      iconUrl={item.icon_url}
+                                      iconClass={item.icon_class}
                                     />
                                   </div>
                                   <div className="min-w-0">
