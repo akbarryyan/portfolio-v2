@@ -41,9 +41,11 @@ body {
   z-index: 1;
   display: flex;
   min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
   flex-direction: column;
   justify-content: space-between;
-  padding: 1.75rem 1.5rem 2rem;
+  padding: 1.75rem 1.5rem max(4.75rem, calc(env(safe-area-inset-bottom) + 4rem));
 }
 
 .intro-webgl {
@@ -180,7 +182,7 @@ body {
 
 @media (min-width: 640px) {
   .intro-grid {
-    padding: 1.85rem 1.85rem 2.2rem;
+    padding: 1.85rem 1.85rem max(2.6rem, calc(env(safe-area-inset-bottom) + 2rem));
   }
 
   .portfolio-overlay-shell {

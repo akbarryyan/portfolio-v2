@@ -588,8 +588,8 @@ function buildCertificateItems(
   });
 }
 
-const GREETING_INTERVAL_MS = 2200;
-const LAST_GREETING_HOLD_MS = 500;
+const GREETING_INTERVAL_MS = 1600;
+const LAST_GREETING_HOLD_MS = 260;
 
 const heroContainer = {
   hidden: {},
