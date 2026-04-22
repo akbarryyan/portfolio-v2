@@ -6,7 +6,10 @@ import type {
   ReactNode,
   TextareaHTMLAttributes,
 } from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
@@ -218,16 +221,21 @@ function Textarea(
 }
 
 function Panel({
+  id,
   title,
   subtitle,
   children,
 }: Readonly<{
+  id?: string;
   title: string;
   subtitle: string;
   children: ReactNode;
 }>) {
   return (
-    <section className="rounded-[2rem] border border-[#ebe6ff] bg-[#fbfaff] p-5 shadow-[0_14px_32px_rgba(92,57,221,0.06)] sm:p-6">
+    <section
+      id={id}
+      className="rounded-[2rem] border border-[#ebe6ff] bg-[#fbfaff] p-5 shadow-[0_14px_32px_rgba(92,57,221,0.06)] sm:p-6"
+    >
       <div className="mb-6 space-y-2">
         <p
           className="text-[0.72rem] uppercase tracking-[0.22em] text-[#6d5ad7]"
@@ -276,20 +284,25 @@ function SidebarGlyph({ label }: Readonly<{ label: string }>) {
     );
   }
 
-  if (label === "Content") {
+  if (label === "Stack") {
     return (
       <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
         <path
-          d="M12 4a8 8 0 1 0 8 8h-8V4Z"
+          d="M12 4 4.5 8 12 12 19.5 8 12 4Z"
           fill="currentColor"
-          opacity=".92"
         />
-        <path d="M12 4a8 8 0 0 1 8 8h-8V4Z" fill="currentColor" opacity=".35" />
+        <path
+          d="M4.5 11.25 12 15.25l7.5-4M4.5 14.5 12 18.5l7.5-4"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     );
   }
 
-  if (label === "Media") {
+  if (label === "Projects") {
     return (
       <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
         <path
@@ -303,13 +316,17 @@ function SidebarGlyph({ label }: Readonly<{ label: string }>) {
     );
   }
 
-  if (label === "Messages") {
+  if (label === "Experience") {
     return (
       <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
         <path
-          d="M6 7.5h12a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 18 16.5H11l-3.5 3v-3H6A1.5 1.5 0 0 1 4.5 15V9A1.5 1.5 0 0 1 6 7.5Z"
-          fill="currentColor"
+          d="M8 7.5h8M8.75 5h6.5a1.75 1.75 0 0 1 1.75 1.75v10.5A1.75 1.75 0 0 1 15.25 19h-6.5A1.75 1.75 0 0 1 7 17.25V6.75A1.75 1.75 0 0 1 8.75 5Z"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
+        <path d="M9 10.5h6M9 14h4.5" stroke="currentColor" strokeWidth="1.8" />
       </svg>
     );
   }
@@ -365,6 +382,7 @@ function SearchIcon() {
 }
 
 export default function AdminPage() {
+  const pathname = usePathname();
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -418,7 +436,7 @@ export default function AdminPage() {
     setToast({ type, message });
   }
 
-  async function checkAdminAccess() {
+  const checkAdminAccess = useCallback(async () => {
     const { data, error } = await supabase.rpc("is_admin");
 
     if (error) {
@@ -428,7 +446,7 @@ export default function AdminPage() {
     }
 
     return Boolean(data);
-  }
+  }, []);
 
   async function loadDashboard() {
     setDashboardError(null);
@@ -610,7 +628,7 @@ export default function AdminPage() {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [checkAdminAccess]);
 
   async function handleSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1003,10 +1021,10 @@ export default function AdminPage() {
 
   const recentContent = projects.slice(0, 5);
   const sidebarItems = [
-    { label: "Overview" },
-    { label: "Content" },
-    { label: "Media" },
-    { label: "Messages" },
+    { label: "Overview", href: "/admin", isActive: pathname === "/admin" },
+    { label: "Stack", href: "/admin/stack", isActive: pathname === "/admin/stack" },
+    { label: "Projects", href: "/admin#projects-panel", isActive: false },
+    { label: "Experience", href: "/admin#experience-panel", isActive: false },
   ];
   const primaryButtonClass =
     "inline-flex h-11 items-center justify-center rounded-full bg-[#16c1e7] px-5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50";
@@ -1072,14 +1090,14 @@ export default function AdminPage() {
 
           <div className="mt-8 flex flex-1 flex-col gap-4">
             {sidebarItems.map((item, index) => (
-              <button
+              <Link
                 key={item.label}
-                type="button"
+                href={item.href}
                 onClick={() => {
                   setIsMobileSidebarOpen(false);
                 }}
                 className={`flex items-center gap-4 rounded-[1rem] px-4 py-3 text-left transition-all duration-300 ${
-                  index === 0
+                  item.isActive
                     ? "bg-[#4520b8] text-[#12d3ef] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     : "text-[#12d3ef] hover:bg-white/8"
                 } ${
@@ -1097,12 +1115,12 @@ export default function AdminPage() {
                   <SidebarGlyph label={item.label} />
                 </span>
                 <span className="text-sm">{item.label}</span>
-              </button>
+              </Link>
             ))}
           </div>
 
-          <button
-            type="button"
+          <Link
+            href="/admin#profile-panel"
             className={`mt-6 flex items-center gap-4 rounded-[1rem] px-4 py-3 text-left text-[#12d3ef] transition-all duration-300 hover:bg-white/8 ${
               isMobileSidebarOpen
                 ? "translate-x-0 opacity-100"
@@ -1113,12 +1131,15 @@ export default function AdminPage() {
                 ? `${80 + sidebarItems.length * 45}ms`
                 : "0ms",
             }}
+            onClick={() => {
+              setIsMobileSidebarOpen(false);
+            }}
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] bg-black/10">
               <SidebarGlyph label="Settings" />
             </span>
             <span className="text-sm">Settings</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -1154,29 +1175,29 @@ export default function AdminPage() {
             AKBAR
           </div>
           <div className="flex flex-1 items-center justify-center gap-3 px-3 lg:mt-10 lg:flex-col lg:px-0 lg:gap-6">
-            {sidebarItems.map((item, index) => (
-              <button
+            {sidebarItems.map((item) => (
+              <Link
                 key={item.label}
-                type="button"
                 className={`flex h-[2.9rem] w-[2.9rem] items-center justify-center rounded-[1rem] transition sm:h-[3.05rem] sm:w-[3.05rem] ${
-                  index === 0
+                  item.isActive
                     ? "bg-[#4520b8] text-[#12d3ef] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     : "text-[#12d3ef] hover:bg-white/8"
                 }`}
                 aria-label={item.label}
+                href={item.href}
               >
                 <SidebarGlyph label={item.label} />
-              </button>
+              </Link>
             ))}
           </div>
           <div className="flex justify-center pl-3 lg:pt-3 lg:pl-0">
-            <button
-              type="button"
+            <Link
+              href="/admin#profile-panel"
               className="flex h-[2.9rem] w-[2.9rem] items-center justify-center rounded-[1rem] text-[#12d3ef] transition hover:bg-white/8 sm:h-[3.05rem] sm:w-[3.05rem]"
               aria-label="Settings"
             >
               <SidebarGlyph label="Settings" />
-            </button>
+            </Link>
           </div>
         </aside>
 
@@ -1429,6 +1450,7 @@ export default function AdminPage() {
 
                     <div className="grid gap-5 xl:grid-cols-2">
                       <Panel
+                        id="profile-panel"
                         title="Profile"
                         subtitle="Edit identitas utama yang tampil di landing page."
                       >
@@ -1558,6 +1580,7 @@ export default function AdminPage() {
                       </Panel>
 
                       <Panel
+                        id="projects-panel"
                         title="Projects"
                         subtitle="Tambahkan project baru lengkap dengan category dan gallery."
                       >
@@ -1670,96 +1693,198 @@ export default function AdminPage() {
                         subtitle="Kelola stack item dan social link dalam satu area cepat."
                       >
                         <div className="grid gap-5 md:grid-cols-2">
-                          <div className="space-y-4">
-                            <Field label="Stack Name">
-                              <Input
-                                value={stackForm.name}
-                                onChange={(event) => {
-                                  setStackForm((current) => ({
-                                    ...current,
-                                    name: event.target.value,
-                                  }));
+                          <div className="space-y-4 rounded-[1.6rem] bg-[#f7f4ff] p-4 sm:p-5">
+                            <div className="space-y-4">
+                              <Field label="Stack Name">
+                                <Input
+                                  value={stackForm.name}
+                                  onChange={(event) => {
+                                    setStackForm((current) => ({
+                                      ...current,
+                                      name: event.target.value,
+                                    }));
+                                  }}
+                                />
+                              </Field>
+                              <Field label="Category">
+                                <Input
+                                  value={stackForm.category}
+                                  onChange={(event) => {
+                                    setStackForm((current) => ({
+                                      ...current,
+                                      category: event.target.value,
+                                    }));
+                                  }}
+                                />
+                              </Field>
+                              <Field label="Icon URL">
+                                <Input
+                                  value={stackForm.icon_url}
+                                  onChange={(event) => {
+                                    setStackForm((current) => ({
+                                      ...current,
+                                      icon_url: event.target.value,
+                                    }));
+                                  }}
+                                />
+                              </Field>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void addStackItem();
                                 }}
-                              />
-                            </Field>
-                            <Field label="Category">
-                              <Input
-                                value={stackForm.category}
-                                onChange={(event) => {
-                                  setStackForm((current) => ({
-                                    ...current,
-                                    category: event.target.value,
-                                  }));
-                                }}
-                              />
-                            </Field>
-                            <Field label="Icon URL">
-                              <Input
-                                value={stackForm.icon_url}
-                                onChange={(event) => {
-                                  setStackForm((current) => ({
-                                    ...current,
-                                    icon_url: event.target.value,
-                                  }));
-                                }}
-                              />
-                            </Field>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                void addStackItem();
-                              }}
-                              disabled={isSaving}
-                              className={primaryButtonClass}
-                            >
-                              Add Stack
-                            </button>
+                                disabled={isSaving}
+                                className={primaryButtonClass}
+                              >
+                                Add Stack
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                                  Stack Preview
+                                </p>
+                                <span className="text-xs text-[#8d83bc]">
+                                  {stackItems.length} item
+                                </span>
+                              </div>
+
+                              {stackItems.length === 0 ? (
+                                <p className="text-sm text-[#8d83bc]">
+                                  Belum ada stack item.
+                                </p>
+                              ) : (
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                  {stackItems.map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="flex items-center gap-3 rounded-[1.2rem] border border-white bg-white px-3 py-3"
+                                    >
+                                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1rem] bg-[#f2eeff]">
+                                        <Image
+                                          src={item.icon_url}
+                                          alt={item.name}
+                                          width={32}
+                                          height={32}
+                                          unoptimized
+                                          className="h-8 w-8 object-contain"
+                                        />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm text-[#2f245b]">
+                                          {item.name}
+                                        </p>
+                                        <p className="truncate text-xs uppercase tracking-[0.12em] text-[#8f86bc]">
+                                          {item.category}
+                                        </p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          void removeRow("stack_items", item.id);
+                                        }}
+                                        className="shrink-0 text-sm text-[#5b33d6]"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
 
-                          <div className="space-y-4">
-                            <Field label="Label">
-                              <Input
-                                value={socialForm.label}
-                                onChange={(event) => {
-                                  setSocialForm((current) => ({
-                                    ...current,
-                                    label: event.target.value,
-                                  }));
+                          <div className="space-y-4 rounded-[1.6rem] bg-[#f7f4ff] p-4 sm:p-5">
+                            <div className="space-y-4">
+                              <Field label="Label">
+                                <Input
+                                  value={socialForm.label}
+                                  onChange={(event) => {
+                                    setSocialForm((current) => ({
+                                      ...current,
+                                      label: event.target.value,
+                                    }));
+                                  }}
+                                />
+                              </Field>
+                              <Field label="Icon Name">
+                                <Input
+                                  value={socialForm.icon_name}
+                                  onChange={(event) => {
+                                    setSocialForm((current) => ({
+                                      ...current,
+                                      icon_name: event.target.value,
+                                    }));
+                                  }}
+                                />
+                              </Field>
+                              <Field label="URL">
+                                <Input
+                                  value={socialForm.url}
+                                  onChange={(event) => {
+                                    setSocialForm((current) => ({
+                                      ...current,
+                                      url: event.target.value,
+                                    }));
+                                  }}
+                                />
+                              </Field>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void addSocialLink();
                                 }}
-                              />
-                            </Field>
-                            <Field label="Icon Name">
-                              <Input
-                                value={socialForm.icon_name}
-                                onChange={(event) => {
-                                  setSocialForm((current) => ({
-                                    ...current,
-                                    icon_name: event.target.value,
-                                  }));
-                                }}
-                              />
-                            </Field>
-                            <Field label="URL">
-                              <Input
-                                value={socialForm.url}
-                                onChange={(event) => {
-                                  setSocialForm((current) => ({
-                                    ...current,
-                                    url: event.target.value,
-                                  }));
-                                }}
-                              />
-                            </Field>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                void addSocialLink();
-                              }}
-                              disabled={isSaving}
-                              className={primaryButtonClass}
-                            >
-                              Add Social
-                            </button>
+                                disabled={isSaving}
+                                className={primaryButtonClass}
+                              >
+                                Add Social
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                                  Social Preview
+                                </p>
+                                <span className="text-xs text-[#8d83bc]">
+                                  {socialLinks.length} link
+                                </span>
+                              </div>
+
+                              {socialLinks.length === 0 ? (
+                                <p className="text-sm text-[#8d83bc]">
+                                  Belum ada social link.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {socialLinks.map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="flex items-center justify-between gap-3 rounded-[1.2rem] border border-white bg-white px-3 py-3"
+                                    >
+                                      <div className="min-w-0">
+                                        <p className="truncate text-sm text-[#2f245b]">
+                                          {item.label}
+                                        </p>
+                                        <p className="truncate text-xs text-[#8f86bc]">
+                                          {item.url}
+                                        </p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          void removeRow("social_links", item.id);
+                                        }}
+                                        className="shrink-0 text-sm text-[#5b33d6]"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </Panel>
@@ -2048,6 +2173,7 @@ export default function AdminPage() {
                     </div>
 
                     <Panel
+                      id="experience-panel"
                       title="Experience List"
                       subtitle="Daftar experience yang saat ini tampil di timeline overlay."
                     >

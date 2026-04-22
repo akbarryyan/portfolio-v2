@@ -649,7 +649,7 @@ function StackGlyph({
   className?: string;
 }>) {
   return (
-    <div className="flex h-28 min-w-28 items-center justify-center px-2">
+    <div className="flex min-w-28 flex-col items-center justify-center gap-3 px-2 py-2 text-center">
       <Image
         src={icon}
         alt={name}
@@ -658,6 +658,12 @@ function StackGlyph({
         unoptimized
         className={`h-20 w-20 object-contain sm:h-24 sm:w-24 ${className ?? ""}`}
       />
+      <p
+        className="max-w-[7.5rem] text-[0.68rem] leading-[1.35] font-medium uppercase tracking-[0.16em] text-white/62 sm:max-w-[8.75rem] sm:text-[0.74rem]"
+        style={{ fontFamily: '"Helvetica Neue", Arial, sans-serif' }}
+      >
+        {name}
+      </p>
     </div>
   );
 }
