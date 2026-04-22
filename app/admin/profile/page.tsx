@@ -4,23 +4,27 @@ import type {
   FormEvent,
   InputHTMLAttributes,
   ReactNode,
+  TextareaHTMLAttributes,
 } from "react";
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
-type StackItemRow = {
+type ProfileRow = {
   id: string;
-  name: string;
-  category: string;
-  icon_url: string | null;
-  icon_class: string | null;
-  website_url: string | null;
-  sort_order: number;
-  is_active: boolean;
+  auth_user_id: string | null;
+  display_name: string;
+  headline: string | null;
+  bio: string | null;
+  location: string | null;
+  availability: string | null;
+  cv_url: string | null;
+  contact_email: string | null;
+  contact_cta_text: string | null;
+  footer_summary: string | null;
+  is_public: boolean;
   updated_at: string;
 };
 
@@ -31,13 +35,16 @@ type ToastState = {
 
 const supabase = createBrowserSupabaseClient();
 
-const initialStackForm = {
-  name: "",
-  category: "",
-  icon_url: "",
-  icon_class: "",
-  website_url: "",
-  sort_order: "0",
+const initialProfileForm = {
+  display_name: "",
+  headline: "",
+  bio: "",
+  location: "",
+  availability: "Available for work",
+  cv_url: "",
+  contact_email: "",
+  contact_cta_text: "",
+  footer_summary: "",
 };
 
 function Field({
@@ -62,6 +69,19 @@ function Input(props: Readonly<InputHTMLAttributes<HTMLInputElement>>) {
     <input
       {...props}
       className={`h-12 w-full rounded-2xl border border-[#ece7ff] bg-[#f8f5ff] px-4 text-sm text-[#32285d] outline-none transition placeholder:text-[#aaa1cd] focus:border-[#5b33d6] focus:bg-white ${
+        props.className ?? ""
+      }`}
+    />
+  );
+}
+
+function Textarea(
+  props: Readonly<TextareaHTMLAttributes<HTMLTextAreaElement>>,
+) {
+  return (
+    <textarea
+      {...props}
+      className={`min-h-28 w-full rounded-2xl border border-[#ece7ff] bg-[#f8f5ff] px-4 py-3 text-sm text-[#32285d] outline-none transition placeholder:text-[#aaa1cd] focus:border-[#5b33d6] focus:bg-white ${
         props.className ?? ""
       }`}
     />
@@ -234,43 +254,7 @@ function SearchIcon() {
   );
 }
 
-function StackIconPreview({
-  name,
-  iconUrl,
-  iconClass,
-}: Readonly<{
-  name: string;
-  iconUrl?: string | null;
-  iconClass?: string | null;
-}>) {
-  if (iconClass) {
-    return (
-      <div className="flex h-10 w-10 items-center justify-center">
-        <i
-          aria-hidden="true"
-          className={`${iconClass} text-[2.2rem] leading-none text-[#5b33d6]`}
-        />
-      </div>
-    );
-  }
-
-  if (iconUrl) {
-    return (
-      <Image
-        src={iconUrl}
-        alt={name}
-        width={40}
-        height={40}
-        unoptimized
-        className="h-10 w-10 object-contain"
-      />
-    );
-  }
-
-  return <div className="h-10 w-10 rounded-full bg-[#e2dcff]" />;
-}
-
-export default function AdminStackPage() {
+export default function AdminProfilePage() {
   const pathname = usePathname();
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [authEmail, setAuthEmail] = useState("");
@@ -282,9 +266,8 @@ export default function AdminStackPage() {
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
-  const [stackItems, setStackItems] = useState<StackItemRow[]>([]);
-  const [stackForm, setStackForm] = useState(initialStackForm);
-  const [editingStackId, setEditingStackId] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [profileForm, setProfileForm] = useState(initialProfileForm);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -317,16 +300,17 @@ export default function AdminStackPage() {
     return Boolean(data);
   }, []);
 
-  async function loadStackPage() {
+  async function loadProfilePage() {
     setDashboardError(null);
 
     const { data, error } = await supabase
-      .from("stack_items")
+      .from("profile")
       .select(
-        "id, name, category, icon_url, icon_class, website_url, sort_order, is_active, updated_at",
+        "id, auth_user_id, display_name, headline, bio, location, availability, cv_url, contact_email, contact_cta_text, footer_summary, is_public, updated_at",
       )
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (error) {
       setDashboardError(
@@ -335,7 +319,24 @@ export default function AdminStackPage() {
       return;
     }
 
-    setStackItems(data ?? []);
+    const nextProfile = data ?? null;
+    setProfile(nextProfile);
+
+    if (nextProfile) {
+      setProfileForm({
+        display_name: nextProfile.display_name ?? "",
+        headline: nextProfile.headline ?? "",
+        bio: nextProfile.bio ?? "",
+        location: nextProfile.location ?? "",
+        availability: nextProfile.availability ?? "Available for work",
+        cv_url: nextProfile.cv_url ?? "",
+        contact_email: nextProfile.contact_email ?? "",
+        contact_cta_text: nextProfile.contact_cta_text ?? "",
+        footer_summary: nextProfile.footer_summary ?? "",
+      });
+    } else {
+      setProfileForm(initialProfileForm);
+    }
   }
 
   useEffect(() => {
@@ -363,7 +364,7 @@ export default function AdminStackPage() {
             : "Email ini berhasil login, tetapi belum terdaftar sebagai admin.",
         );
         if (allowed) {
-          void loadStackPage();
+          void loadProfilePage();
         }
       } else {
         setIsAdmin(false);
@@ -391,14 +392,15 @@ export default function AdminStackPage() {
           );
           setIsAuthLoading(false);
           if (allowed) {
-            void loadStackPage();
+            void loadProfilePage();
           }
         } else {
           setIsAdmin(false);
           setAuthMessage(null);
           setDashboardError(null);
           setSuccessMessage(null);
-          setStackItems([]);
+          setProfile(null);
+          setProfileForm(initialProfileForm);
           setIsAuthLoading(false);
         }
       })();
@@ -455,144 +457,31 @@ export default function AdminStackPage() {
     showToast("info", "Session ditutup.");
   }
 
-  async function addStackItem() {
-    if (!stackForm.icon_url.trim() && !stackForm.icon_class.trim()) {
-      const message = "Isi minimal Icon URL atau Icon Class untuk stack item.";
-      setDashboardError(message);
-      showToast("error", message);
-      return;
-    }
-
+  async function saveProfile() {
     setIsSaving(true);
     setSuccessMessage(null);
     setDashboardError(null);
 
-    const { error } = await supabase.from("stack_items").insert({
-      name: stackForm.name,
-      category: stackForm.category,
-      icon_url: stackForm.icon_url || null,
-      icon_class: stackForm.icon_class || null,
-      website_url: stackForm.website_url || null,
-      sort_order: Number(stackForm.sort_order || 0),
-    });
+    const payload = {
+      ...profileForm,
+      auth_user_id: (await supabase.auth.getUser()).data.user?.id ?? null,
+    };
+
+    const result = profile
+      ? await supabase.from("profile").update(payload).eq("id", profile.id)
+      : await supabase.from("profile").insert(payload);
 
     setIsSaving(false);
 
-    if (error) {
-      setDashboardError(error.message);
-      showToast("error", error.message);
+    if (result.error) {
+      setDashboardError(result.error.message);
+      showToast("error", result.error.message);
       return;
     }
 
-    setStackForm(initialStackForm);
-    setSuccessMessage("Stack item berhasil ditambahkan.");
-    showToast("success", "Stack item berhasil ditambahkan.");
-    await loadStackPage();
-  }
-
-  async function updateStackItem() {
-    if (!editingStackId) {
-      return;
-    }
-
-    if (!stackForm.icon_url.trim() && !stackForm.icon_class.trim()) {
-      const message = "Isi minimal Icon URL atau Icon Class untuk stack item.";
-      setDashboardError(message);
-      showToast("error", message);
-      return;
-    }
-
-    setIsSaving(true);
-    setSuccessMessage(null);
-    setDashboardError(null);
-
-    const { error } = await supabase
-      .from("stack_items")
-      .update({
-        name: stackForm.name,
-        category: stackForm.category,
-        icon_url: stackForm.icon_url || null,
-        icon_class: stackForm.icon_class || null,
-        website_url: stackForm.website_url || null,
-        sort_order: Number(stackForm.sort_order || 0),
-      })
-      .eq("id", editingStackId);
-
-    setIsSaving(false);
-
-    if (error) {
-      setDashboardError(error.message);
-      showToast("error", error.message);
-      return;
-    }
-
-    setEditingStackId(null);
-    setStackForm(initialStackForm);
-    setSuccessMessage("Stack item berhasil diperbarui.");
-    showToast("success", "Stack item berhasil diperbarui.");
-    await loadStackPage();
-  }
-
-  function startEditingStack(item: StackItemRow) {
-    setEditingStackId(item.id);
-    setStackForm({
-      name: item.name,
-      category: item.category,
-      icon_url: item.icon_url ?? "",
-      icon_class: item.icon_class ?? "",
-      website_url: item.website_url ?? "",
-      sort_order: String(item.sort_order),
-    });
-    setSuccessMessage(null);
-    setDashboardError(null);
-  }
-
-  function cancelStackEdit() {
-    setEditingStackId(null);
-    setStackForm(initialStackForm);
-  }
-
-  async function toggleStackActive(item: StackItemRow) {
-    setIsSaving(true);
-    setSuccessMessage(null);
-    setDashboardError(null);
-
-    const { error } = await supabase
-      .from("stack_items")
-      .update({ is_active: !item.is_active })
-      .eq("id", item.id);
-
-    setIsSaving(false);
-
-    if (error) {
-      setDashboardError(error.message);
-      showToast("error", error.message);
-      return;
-    }
-
-    setSuccessMessage("Status stack item berhasil diperbarui.");
-    showToast("success", "Status stack item berhasil diperbarui.");
-    await loadStackPage();
-  }
-
-  async function removeStackItem(id: string) {
-    setIsSaving(true);
-    setSuccessMessage(null);
-    setDashboardError(null);
-
-    const { error } = await supabase.from("stack_items").delete().eq("id", id);
-
-    setIsSaving(false);
-
-    if (error) {
-      setDashboardError(error.message);
-      showToast("error", error.message);
-      return;
-    }
-
-    setSuccessMessage("Stack item berhasil dihapus.");
-    showToast("success", "Stack item berhasil dihapus.");
-    await loadStackPage();
+    setSuccessMessage("Profile berhasil disimpan.");
+    showToast("success", "Profile berhasil disimpan.");
+    await loadProfilePage();
   }
 
   const sidebarItems = [
@@ -616,8 +505,7 @@ export default function AdminStackPage() {
       isActive: pathname === "/admin/contact",
     },
   ];
-  const activeItems = stackItems.filter((item) => item.is_active).length;
-  const categoriesCount = new Set(stackItems.map((item) => item.category)).size;
+
   const primaryButtonClass =
     "inline-flex h-11 items-center justify-center rounded-full bg-[#16c1e7] px-5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50";
   const secondaryButtonClass =
@@ -662,10 +550,7 @@ export default function AdminStackPage() {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between">
-            <div
-              className="text-[0.92rem] leading-none tracking-[0.02em] font-bold"
-              style={{ fontFamily: "var(--font-bungee)" }}
-            >
+            <div className="text-[0.92rem] leading-none tracking-[0.02em] font-bold">
               AKBAR
             </div>
             <button
@@ -712,7 +597,7 @@ export default function AdminStackPage() {
           </div>
 
           <Link
-            href="/admin#profile-panel"
+            href="/admin/profile"
             onClick={() => {
               setIsMobileSidebarOpen(false);
             }}
@@ -737,10 +622,7 @@ export default function AdminStackPage() {
 
       <div className="flex h-screen w-full flex-col overflow-hidden bg-[#5429cf] shadow-[0_24px_90px_rgba(96,70,193,0.16)] lg:grid lg:grid-cols-[108px_1fr]">
         <div className="flex items-center justify-between px-4 py-4 text-[#14c1e7] lg:hidden">
-          <div
-            className="text-[0.9rem] leading-none tracking-[0.02em] font-bold"
-            style={{ fontFamily: "var(--font-bungee)" }}
-          >
+          <div className="text-[0.9rem] leading-none tracking-[0.02em] font-bold">
             AKBAR
           </div>
           <button
@@ -760,10 +642,7 @@ export default function AdminStackPage() {
         </div>
 
         <aside className="z-0 hidden h-screen flex-col px-4 py-8 text-[#14c1e7] lg:flex">
-          <div
-            className="text-center text-[0.84rem] leading-none tracking-[0.02em] font-bold"
-            style={{ fontFamily: "var(--font-bungee)" }}
-          >
+          <div className="text-center text-[0.84rem] leading-none tracking-[0.02em] font-bold">
             AKBAR
           </div>
           <div className="flex flex-1 items-center justify-center gap-3 px-3 lg:mt-10 lg:flex-col lg:px-0 lg:gap-6">
@@ -784,7 +663,7 @@ export default function AdminStackPage() {
           </div>
           <div className="flex justify-center pl-3 lg:pt-3 lg:pl-0">
             <Link
-              href="/admin#profile-panel"
+              href="/admin/profile"
               className="flex h-[2.9rem] w-[2.9rem] items-center justify-center rounded-[1rem] text-[#12d3ef] transition hover:bg-white/8 sm:h-[3.05rem] sm:w-[3.05rem]"
               aria-label="Settings"
             >
@@ -827,7 +706,7 @@ export default function AdminStackPage() {
                 <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
                   <Panel
                     title="Auth"
-                    subtitle="Masuk ke halaman pengelolaan stack. UI ini memakai session Supabase yang sama dengan dashboard utama."
+                    subtitle="Masuk ke modul profile menggunakan session Supabase admin yang sama."
                   >
                     <form onSubmit={handleSignIn} className="space-y-4">
                       <Field label="Email">
@@ -872,13 +751,13 @@ export default function AdminStackPage() {
                   </Panel>
 
                   <Panel
-                    title="Stack Route"
-                    subtitle="Halaman ini fokus untuk mengelola nama stack, icon, kategori, urutan tampil, dan status aktif."
+                    title="Profile Editor"
+                    subtitle="Halaman ini sekarang jadi editor fokus untuk identitas utama portfolio kamu."
                   >
                     <div className="space-y-3 text-sm leading-7 text-[#786ea6]">
-                      <p>1. Login dengan email admin Supabase kamu.</p>
-                      <p>2. Tambahkan item baru atau edit item yang sudah ada.</p>
-                      <p>3. Kembali ke `/admin` kapan saja untuk mengelola konten lain.</p>
+                      <p>1. Login dengan akun admin Supabase kamu.</p>
+                      <p>2. Edit konten profile lalu simpan.</p>
+                      <p>3. Cek perubahan di landing page tanpa kembali ke overview.</p>
                     </div>
                   </Panel>
                 </div>
@@ -912,7 +791,7 @@ export default function AdminStackPage() {
                     subtitle="Proteksi admin tetap memakai tabel admin_users + fungsi is_admin()."
                   >
                     <div className="space-y-3 text-sm leading-7 text-[#786ea6]">
-                      <p>1. Jalankan `supabase/schema.sql` jika belum update.</p>
+                      <p>1. Jalankan schema Supabase terbaru jika perlu.</p>
                       <p>2. Masukkan email ini ke tabel `public.admin_users`.</p>
                       <p>3. Refresh halaman atau login ulang.</p>
                     </div>
@@ -925,53 +804,50 @@ export default function AdminStackPage() {
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                           <h1 className="text-[1.8rem] tracking-[-0.04em] text-[#2f245b] sm:text-[2.35rem]">
-                            Stack Library
+                            Profile Studio
                           </h1>
                           <p className="mt-2 text-sm leading-7 text-[#7a70aa]">
-                            {sessionEmail} • atur icon, nama, kategori, urutan tampil, dan
-                            status aktif untuk section STACK di landing page.
+                            {sessionEmail} • edit identitas utama, headline, contact CTA,
+                            dan footer summary portfolio kamu di satu halaman fokus.
                           </p>
                         </div>
-                        <Link href="/admin" className={secondaryButtonClass}>
-                          Back to Dashboard
-                        </Link>
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            className={secondaryButtonClass}
+                            onClick={() => {
+                              void loadProfilePage();
+                            }}
+                          >
+                            Refresh Data
+                          </button>
+                          <button
+                            type="button"
+                            className={secondaryButtonClass}
+                            onClick={() => {
+                              void handleSignOut();
+                            }}
+                          >
+                            Sign Out
+                          </button>
+                        </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-                      <StatCard label="Total Stack" value={String(stackItems.length)} />
-                      <StatCard label="Active" value={String(activeItems)} />
-                      <StatCard label="Categories" value={String(categoriesCount)} />
+                      <StatCard label="Profile Row" value={profile ? "Ready" : "New"} />
                       <StatCard
-                        label="Last Update"
-                        value={stackItems[0] ? new Date(stackItems[0].updated_at).toLocaleDateString("id-ID") : "-"}
+                        label="Visibility"
+                        value={profile?.is_public ? "Public" : "Private"}
                       />
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.6rem] bg-[#f7f4ff] px-5 py-4">
-                      <p className="text-sm text-[#786ea6]">
-                        Nama stack yang kamu isi di sini akan tampil di bawah ikon pada overlay.
-                      </p>
-                      <div className="flex flex-wrap gap-3">
-                        <button
-                          type="button"
-                          className={secondaryButtonClass}
-                          onClick={() => {
-                            void loadStackPage();
-                          }}
-                        >
-                          Refresh Data
-                        </button>
-                        <button
-                          type="button"
-                          className={secondaryButtonClass}
-                          onClick={() => {
-                            void handleSignOut();
-                          }}
-                        >
-                          Sign Out
-                        </button>
-                      </div>
+                      <StatCard
+                        label="Contact"
+                        value={profileForm.contact_email ? "Connected" : "Empty"}
+                      />
+                      <StatCard
+                        label="CV"
+                        value={profileForm.cv_url ? "Attached" : "Missing"}
+                      />
                     </div>
 
                     {(dashboardError || successMessage || authMessage) && (
@@ -986,222 +862,195 @@ export default function AdminStackPage() {
                       </div>
                     )}
 
-                    <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+                    <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
                       <Panel
-                        title="Stack Form"
-                        subtitle="Tambahkan atau edit stack item yang akan tampil pada marquee overlay."
+                        title="Profile Form"
+                        subtitle="Seluruh field penting untuk hero, contact, dan footer ada di sini."
                       >
                         <div className="grid gap-4 sm:grid-cols-2">
-                          <Field label="Stack Name">
+                          <Field label="Display Name">
                             <Input
-                              value={stackForm.name}
+                              value={profileForm.display_name}
                               onChange={(event) => {
-                                setStackForm((current) => ({
+                                setProfileForm((current) => ({
                                   ...current,
-                                  name: event.target.value,
+                                  display_name: event.target.value,
                                 }));
                               }}
-                              placeholder="TypeScript"
                             />
                           </Field>
-                          <Field label="Category">
+                          <Field label="Headline">
                             <Input
-                              value={stackForm.category}
+                              value={profileForm.headline}
                               onChange={(event) => {
-                                setStackForm((current) => ({
+                                setProfileForm((current) => ({
                                   ...current,
-                                  category: event.target.value,
+                                  headline: event.target.value,
                                 }));
                               }}
-                              placeholder="Languages"
                             />
                           </Field>
-                          <Field label="Icon URL">
+                          <Field label="Location">
                             <Input
-                              value={stackForm.icon_url}
+                              value={profileForm.location}
                               onChange={(event) => {
-                                setStackForm((current) => ({
+                                setProfileForm((current) => ({
                                   ...current,
-                                  icon_url: event.target.value,
+                                  location: event.target.value,
                                 }));
                               }}
-                              placeholder="https://cdn.jsdelivr.net/..."
                             />
                           </Field>
-                          <Field label="Icon Class">
+                          <Field label="Availability">
                             <Input
-                              value={stackForm.icon_class}
+                              value={profileForm.availability}
                               onChange={(event) => {
-                                setStackForm((current) => ({
+                                setProfileForm((current) => ({
                                   ...current,
-                                  icon_class: event.target.value,
+                                  availability: event.target.value,
                                 }));
                               }}
-                              placeholder="devicon-angularjs-plain"
                             />
                           </Field>
-                          <Field label="Website URL">
+                          <Field label="Contact Email">
                             <Input
-                              value={stackForm.website_url}
+                              value={profileForm.contact_email}
                               onChange={(event) => {
-                                setStackForm((current) => ({
+                                setProfileForm((current) => ({
                                   ...current,
-                                  website_url: event.target.value,
+                                  contact_email: event.target.value,
                                 }));
                               }}
-                              placeholder="https://www.typescriptlang.org"
                             />
                           </Field>
-                          <Field label="Sort Order">
+                          <Field label="CV URL">
                             <Input
-                              type="number"
-                              value={stackForm.sort_order}
+                              value={profileForm.cv_url}
                               onChange={(event) => {
-                                setStackForm((current) => ({
+                                setProfileForm((current) => ({
                                   ...current,
-                                  sort_order: event.target.value,
+                                  cv_url: event.target.value,
                                 }));
                               }}
                             />
                           </Field>
                         </div>
 
-                        <div className="mt-5 rounded-[1.5rem] border border-[#ebe6ff] bg-[#f7f4ff] p-4">
-                          <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
-                            Live Preview
-                          </p>
-                          <div className="mt-4 flex items-center gap-4 rounded-[1.2rem] bg-white p-4">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-[1.1rem] bg-[#f2eeff]">
-                              <StackIconPreview
-                                name={stackForm.name || "Stack icon"}
-                                iconUrl={stackForm.icon_url}
-                                iconClass={stackForm.icon_class}
-                              />
-                            </div>
-                            <div>
-                              <p className="text-sm text-[#2f245b]">
-                                {stackForm.name || "Stack name"}
-                              </p>
-                              <p className="text-xs uppercase tracking-[0.12em] text-[#8f86bc]">
-                                {stackForm.category || "Category"}
-                              </p>
-                            </div>
-                          </div>
+                        <div className="mt-4 space-y-4">
+                          <Field label="Bio">
+                            <Textarea
+                              value={profileForm.bio}
+                              onChange={(event) => {
+                                setProfileForm((current) => ({
+                                  ...current,
+                                  bio: event.target.value,
+                                }));
+                              }}
+                            />
+                          </Field>
+                          <Field label="Contact CTA Text">
+                            <Textarea
+                              value={profileForm.contact_cta_text}
+                              onChange={(event) => {
+                                setProfileForm((current) => ({
+                                  ...current,
+                                  contact_cta_text: event.target.value,
+                                }));
+                              }}
+                            />
+                          </Field>
+                          <Field label="Footer Summary">
+                            <Textarea
+                              value={profileForm.footer_summary}
+                              onChange={(event) => {
+                                setProfileForm((current) => ({
+                                  ...current,
+                                  footer_summary: event.target.value,
+                                }));
+                              }}
+                            />
+                          </Field>
                         </div>
 
-                        <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
+                        <div className="mt-5 flex items-center justify-between gap-4">
                           <p className="text-sm text-[#8d83bc]">
-                            {editingStackId
-                              ? "Mode edit aktif untuk stack item terpilih."
-                              : "Tambahkan stack item baru ke portfolio."}
+                            {profile
+                              ? `Updated ${new Date(profile.updated_at).toLocaleString("id-ID")}`
+                              : "Belum ada profile row."}
                           </p>
-                          <div className="flex flex-wrap gap-3">
-                            {editingStackId && (
-                              <button
-                                type="button"
-                                onClick={cancelStackEdit}
-                                disabled={isSaving}
-                                className={secondaryButtonClass}
-                              >
-                                Cancel Edit
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (editingStackId) {
-                                  void updateStackItem();
-                                  return;
-                                }
-
-                                void addStackItem();
-                              }}
-                              disabled={isSaving}
-                              className={primaryButtonClass}
-                            >
-                              {editingStackId ? "Update Stack" : "Add Stack"}
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void saveProfile();
+                            }}
+                            disabled={isSaving}
+                            className={primaryButtonClass}
+                          >
+                            Save Profile
+                          </button>
                         </div>
                       </Panel>
 
-                      <Panel
-                        title="Stack Library"
-                        subtitle="Seluruh item di bawah ini dipakai untuk overlay STACK. Kamu bisa edit, nonaktifkan, atau hapus item kapan saja."
-                      >
-                        {stackItems.length === 0 ? (
-                          <p className="text-sm text-[#8d83bc]">Belum ada stack item.</p>
-                        ) : (
-                          <div className="space-y-3">
-                            {stackItems.map((item) => (
-                              <div
-                                key={item.id}
-                                className="flex flex-col gap-4 rounded-[1.4rem] bg-[#f7f4ff] p-4 sm:flex-row sm:items-center sm:justify-between"
-                              >
-                                <div className="flex min-w-0 items-center gap-4">
-                                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.1rem] bg-white">
-                                    <StackIconPreview
-                                      name={item.name}
-                                      iconUrl={item.icon_url}
-                                      iconClass={item.icon_class}
-                                    />
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="truncate text-lg text-[#2f245b]">
-                                      {item.name}
-                                    </p>
-                                    <p className="truncate text-sm text-[#6f63a0]">
-                                      {item.category}
-                                    </p>
-                                    <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#8f86bc]">
-                                      Order {item.sort_order} • {item.is_active ? "Active" : "Hidden"}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-4">
-                                  {item.website_url && (
-                                    <a
-                                      href={item.website_url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-sm text-[#5b33d6]"
-                                    >
-                                      Visit
-                                    </a>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      startEditingStack(item);
-                                    }}
-                                    className="text-sm text-[#5b33d6]"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      void toggleStackActive(item);
-                                    }}
-                                    className="text-sm text-[#5b33d6]"
-                                  >
-                                    {item.is_active ? "Hide" : "Show"}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      void removeStackItem(item.id);
-                                    }}
-                                    className="text-sm text-[#5b33d6]"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                      <div className="space-y-5">
+                        <Panel
+                          title="Live Snapshot"
+                          subtitle="Preview ringkas dari konten profile yang sedang aktif."
+                        >
+                          <div className="space-y-4">
+                            <div className="rounded-[1.4rem] bg-[#f7f4ff] p-4">
+                              <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                                Hero Name
+                              </p>
+                              <p className="mt-3 text-2xl tracking-[-0.04em] text-[#2f245b]">
+                                {profileForm.display_name || "Akbar Rayyan"}
+                              </p>
+                              <p className="mt-2 text-sm text-[#786ea6]">
+                                {profileForm.headline || "Fullstack Developer"}
+                              </p>
+                            </div>
+                            <div className="rounded-[1.4rem] bg-[#f7f4ff] p-4">
+                              <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                                Contact & Footer
+                              </p>
+                              <p className="mt-3 text-sm leading-7 text-[#786ea6]">
+                                {profileForm.contact_email || "Belum ada contact email"}
+                              </p>
+                              <p className="mt-2 text-sm leading-7 text-[#786ea6]">
+                                {profileForm.footer_summary || "Belum ada footer summary"}
+                              </p>
+                            </div>
                           </div>
-                        )}
-                      </Panel>
+                        </Panel>
+
+                        <Panel
+                          title="Publishing Notes"
+                          subtitle="Checklist cepat sebelum profile kamu tampil sempurna di landing page."
+                        >
+                          <div className="space-y-3">
+                            <div className="rounded-[1.35rem] bg-[#f7f4ff] px-4 py-4">
+                              <p className="text-sm text-[#2f245b]">
+                                {profileForm.display_name
+                                  ? "Display name sudah terisi."
+                                  : "Isi display name terlebih dahulu."}
+                              </p>
+                            </div>
+                            <div className="rounded-[1.35rem] bg-[#f7f4ff] px-4 py-4">
+                              <p className="text-sm text-[#2f245b]">
+                                {profileForm.contact_email
+                                  ? "Contact email siap dipakai di section Contact."
+                                  : "Tambahkan contact email untuk section Contact."}
+                              </p>
+                            </div>
+                            <div className="rounded-[1.35rem] bg-[#f7f4ff] px-4 py-4">
+                              <p className="text-sm text-[#2f245b]">
+                                {profileForm.cv_url
+                                  ? "CV URL sudah terhubung."
+                                  : "Tambahkan CV URL agar tombol Download CV aktif penuh."}
+                              </p>
+                            </div>
+                          </div>
+                        </Panel>
+                      </div>
                     </div>
                   </section>
                 </>

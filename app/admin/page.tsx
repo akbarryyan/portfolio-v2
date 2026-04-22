@@ -333,6 +333,47 @@ function SidebarGlyph({ label }: Readonly<{ label: string }>) {
     );
   }
 
+  if (label === "Profile") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
+        <path
+          d="M12 12a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Zm-6 7a6 6 0 0 1 12 0"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  if (label === "Certificates") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
+        <path
+          d="M7 5.5h10A1.5 1.5 0 0 1 18.5 7v7A1.5 1.5 0 0 1 17 15.5H13l-3.5 3v-3H7A1.5 1.5 0 0 1 5.5 14V7A1.5 1.5 0 0 1 7 5.5Z"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        />
+        <path d="M9 9h6M9 12h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (label === "Contact") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
+        <path
+          d="M5.5 8.25 12 13l6.5-4.75M7 6h10A1.5 1.5 0 0 1 18.5 7.5v9A1.5 1.5 0 0 1 17 18H7A1.5 1.5 0 0 1 5.5 16.5v-9A1.5 1.5 0 0 1 7 6Z"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" className="h-[1.35rem] w-[1.35rem]" fill="none">
       <path
@@ -1069,8 +1110,79 @@ export default function AdminPage() {
   const sidebarItems = [
     { label: "Overview", href: "/admin", isActive: pathname === "/admin" },
     { label: "Stack", href: "/admin/stack", isActive: pathname === "/admin/stack" },
-    { label: "Projects", href: "/admin#projects-panel", isActive: false },
-    { label: "Experience", href: "/admin#experience-panel", isActive: false },
+    { label: "Projects", href: "/admin/projects", isActive: pathname === "/admin/projects" },
+    {
+      label: "Experience",
+      href: "/admin/experience",
+      isActive: pathname === "/admin/experience",
+    },
+    { label: "Profile", href: "/admin/profile", isActive: pathname === "/admin/profile" },
+    {
+      label: "Certificates",
+      href: "/admin/certificates",
+      isActive: pathname === "/admin/certificates",
+    },
+    {
+      label: "Contact",
+      href: "/admin/contact",
+      isActive: pathname === "/admin/contact",
+    },
+  ];
+  const quickActionCards = [
+    {
+      title: "Manage Profile",
+      description: "Atur identitas utama, headline, contact CTA, dan footer summary.",
+      href: "/admin/profile",
+    },
+    {
+      title: "Manage Stack",
+      description: "Kelola icon, nama, kategori, urutan tampil, dan status aktif stack.",
+      href: "/admin/stack",
+    },
+    {
+      title: "Manage Projects",
+      description: "Tambah, edit, dan rapikan daftar project yang tampil di portfolio.",
+      href: "/admin/projects",
+    },
+    {
+      title: "Manage Experience",
+      description: "Kelola timeline pengalaman, posisi, PT, periode, dan highlight.",
+      href: "/admin/experience",
+    },
+    {
+      title: "Manage Certificates",
+      description: "Kelola gallery sertifikat beserta judul, issuer, tahun, dan gambar.",
+      href: "/admin/certificates",
+    },
+    {
+      title: "Manage Contact/Footer",
+      description: "Atur email kontak, CTA contact, dan footer summary secara terpisah.",
+      href: "/admin/contact",
+    },
+  ];
+  const healthCards = [
+    {
+      label: "Profile Status",
+      value: profile ? "Ready" : "Missing",
+      detail: profile
+        ? "Profile utama sudah tersambung dan bisa dipublikasikan."
+        : "Belum ada profile row yang tersimpan.",
+    },
+    {
+      label: "Contact Setup",
+      value: profileForm.contact_email ? "Connected" : "Needs Input",
+      detail: profileForm.contact_email
+        ? `Email kontak: ${profileForm.contact_email}`
+        : "Isi contact email agar section contact lebih siap dipakai.",
+    },
+    {
+      label: "Social Links",
+      value: String(socialLinks.length),
+      detail:
+        socialLinks.length > 0
+          ? "Social links aktif sudah siap dipakai di hero, menu, dan footer."
+          : "Belum ada social links aktif.",
+    },
   ];
   const primaryButtonClass =
     "inline-flex h-11 items-center justify-center rounded-full bg-[#16c1e7] px-5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50";
@@ -1458,15 +1570,12 @@ export default function AdminPage() {
                                     {item.category || "General"} • {item.year ?? "-"} • {item.status}
                                   </p>
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    void removeRow("projects", item.id);
-                                  }}
-                                  className="mt-3 text-sm text-[#5b33d6]"
+                                <Link
+                                  href="/admin/projects"
+                                  className="mt-3 inline-flex text-sm text-[#5b33d6]"
                                 >
-                                  Remove
-                                </button>
+                                  Manage
+                                </Link>
                               </div>
                               <div
                                 className="hidden grid-cols-[1.4fr_0.8fr_0.7fr_0.9fr_80px] gap-3 border-t border-white px-4 py-3 text-sm text-[#4c4178] sm:grid"
@@ -1478,15 +1587,12 @@ export default function AdminPage() {
                                 <span>{item.category || "General"}</span>
                                 <span>{item.year ?? "-"}</span>
                                 <span>{item.status}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    void removeRow("projects", item.id);
-                                  }}
+                                <Link
+                                  href="/admin/projects"
                                   className="text-right text-[#5b33d6]"
                                 >
-                                  •••
-                                </button>
+                                  Open
+                                </Link>
                               </div>
                             </div>
                           ))}
@@ -1494,7 +1600,97 @@ export default function AdminPage() {
                       )}
                     </Panel>
 
-                    <div className="grid gap-5 xl:grid-cols-2">
+                    <div className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
+                      <Panel
+                        title="Quick Actions"
+                        subtitle="Overview sekarang fokus untuk navigasi cepat ke editor per modul, bukan lagi tempat semua form menumpuk."
+                      >
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          {quickActionCards.map((item) => (
+                            <Link
+                              key={item.title}
+                              href={item.href}
+                              className="rounded-[1.5rem] border border-[#ebe6ff] bg-[#f7f4ff] p-4 transition hover:border-[#d7cbff] hover:bg-white"
+                            >
+                              <p className="text-lg text-[#2f245b]">{item.title}</p>
+                              <p className="mt-2 text-sm leading-7 text-[#786ea6]">
+                                {item.description}
+                              </p>
+                              <span className="mt-4 inline-flex text-sm text-[#5b33d6]">
+                                Open Module
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </Panel>
+
+                      <Panel
+                        title="Workspace Health"
+                        subtitle="Ringkasan cepat untuk memastikan konten inti portfolio sudah siap dipublikasikan."
+                      >
+                        <div className="space-y-3">
+                          {healthCards.map((item) => (
+                            <div
+                              key={item.label}
+                              className="rounded-[1.35rem] bg-[#f7f4ff] px-4 py-4"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                                  {item.label}
+                                </p>
+                                <span className="text-sm text-[#5b33d6]">{item.value}</span>
+                              </div>
+                              <p className="mt-2 text-sm leading-7 text-[#786ea6]">
+                                {item.detail}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </Panel>
+                    </div>
+
+                    <Panel
+                      title="Recent Updates"
+                      subtitle="Snapshot cepat dari konten aktif yang sudah masuk ke portfolio."
+                    >
+                      <div className="grid gap-4 lg:grid-cols-3">
+                        <div className="rounded-[1.45rem] bg-[#f7f4ff] p-4">
+                          <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                            Latest Stack
+                          </p>
+                          <p className="mt-3 text-lg text-[#2f245b]">
+                            {stackItems[0]?.name ?? "Belum ada stack item"}
+                          </p>
+                          <p className="mt-2 text-sm text-[#786ea6]">
+                            {stackItems[0]?.category ?? "Tambahkan stack dari halaman Stack."}
+                          </p>
+                        </div>
+                        <div className="rounded-[1.45rem] bg-[#f7f4ff] p-4">
+                          <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                            Latest Experience
+                          </p>
+                          <p className="mt-3 text-lg text-[#2f245b]">
+                            {experienceRows[0]?.title ?? "Belum ada experience"}
+                          </p>
+                          <p className="mt-2 text-sm text-[#786ea6]">
+                            {experienceRows[0]?.company ?? "Tambahkan experience dari modul terkait."}
+                          </p>
+                        </div>
+                        <div className="rounded-[1.45rem] bg-[#f7f4ff] p-4">
+                          <p className="text-[0.72rem] uppercase tracking-[0.14em] text-[#8f86bc]">
+                            Latest Certificate
+                          </p>
+                          <p className="mt-3 text-lg text-[#2f245b]">
+                            {certificateRows[0]?.title ?? "Belum ada certificate"}
+                          </p>
+                          <p className="mt-2 text-sm text-[#786ea6]">
+                            {certificateRows[0]?.issuer ?? "Tambahkan certificate dari modul nanti."}
+                          </p>
+                        </div>
+                      </div>
+                    </Panel>
+
+                    <div className="hidden grid gap-5 xl:grid-cols-2">
                       <Panel
                         id="profile-panel"
                         title="Profile"
